@@ -1,0 +1,3 @@
+- [ ] Add a local, outfit-filtered reference library and compact design picker with honest image placeholders.
+- [ ] Pass one selected reference through the existing request and apply construction metadata with safe image fallback.
+- [ ] Verify selection, prompt priority, one-call behavior and legacy compatibility using mocks and the preview.
