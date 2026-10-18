@@ -242,7 +242,7 @@ function Index() {
               {preview && <img src={preview} alt="" className="h-full w-full object-cover" />}
             </div>
           </div>
-          <h2 className="mt-8 text-3xl font-semibold text-primary">Creating your lehenga...</h2>
+          <h2 className="mt-8 text-3xl font-semibold text-primary">Saving your design...</h2>
           <p className="mt-2 text-sm text-muted-foreground">Preserving your saree's original design</p>
         </section>
       )}

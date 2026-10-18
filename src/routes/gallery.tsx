@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadDesigns, type SavedDesign } from "@/lib/local-gallery";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -16,16 +16,7 @@ export const Route = createFileRoute("/gallery")({
   component: Gallery,
 });
 
-type Generation = {
-  id: string;
-  created_at: string;
-  audience: string;
-  age: string | null;
-  style: string;
-  model_type: string;
-  generated_image_url: string;
-  blouse_design: string | null;
-};
+type Generation = SavedDesign;
 
 function MetaChip({ children }: { children: React.ReactNode }) {
   return (
@@ -37,40 +28,8 @@ function MetaChip({ children }: { children: React.ReactNode }) {
 
 function Gallery() {
   const [items, setItems] = useState<Generation[] | null>(null);
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { data, error: qErr } = await supabase
-        .from("generations")
-        .select("id, created_at, audience, age, style, model_type, generated_image_url, blouse_design")
-        .eq("status", "completed")
-        .not("generated_image_url", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(60);
-      if (qErr) {
-        setError("We couldn't load your lehengas. Please try again.");
-        return;
-      }
-      const rows = (data ?? []) as Generation[];
-      setItems(rows);
-      const paths = rows
-        .map((r) => r.generated_image_url)
-        .filter((u) => u.startsWith("lehenga-results/"))
-        .map((u) => u.slice("lehenga-results/".length));
-      if (paths.length) {
-        const { data: signed } = await supabase.storage
-          .from("lehenga-results")
-          .createSignedUrls(paths, 60 * 60);
-        const map: Record<string, string> = {};
-        signed?.forEach((s, i) => {
-          if (s.signedUrl) map[rows.find((r) => r.generated_image_url === `lehenga-results/${paths[i]}`)!.id] = s.signedUrl;
-        });
-        setUrls(map);
-      }
-    })();
-  }, []);
+  const error: string | null = null;
+  useEffect(() => setItems(loadDesigns()), []);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 pb-8 pt-5">
@@ -79,7 +38,7 @@ function Gallery() {
           ← Back to create
         </Link>
         <h1 className="mt-2 text-4xl font-semibold leading-none text-primary">My Lehengas</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">All your saved saree-to-lehenga designs</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">Designs saved on this device</p>
         <div className="divider-gold mx-auto mt-3 w-40" />
       </header>
 
@@ -106,8 +65,8 @@ function Gallery() {
         <section className="mt-5 grid grid-cols-2 gap-3">
           {items.map((g) => (
             <article key={g.id} className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
-              {urls[g.id] ? (
-                <img src={urls[g.id]} alt={`${g.style} lehenga for ${g.audience}`} className="aspect-[2/3] w-full object-cover" loading="lazy" />
+              {g.image ? (
+                <img src={g.image} alt={`${g.style} lehenga for ${g.audience}`} className="aspect-[2/3] w-full object-cover" loading="lazy" />
               ) : (
                 <div className="aspect-[2/3] w-full animate-pulse bg-secondary" />
               )}
@@ -115,7 +74,8 @@ function Gallery() {
                 <MetaChip>{g.audience}{g.age ? ` · ${g.age.replace(" years", "y")}` : ""}</MetaChip>
                 <MetaChip>{g.style}</MetaChip>
                 <MetaChip>{g.model_type === "Fashion model" ? "Model" : "Mannequin"}</MetaChip>
-                {g.blouse_design && <MetaChip>{g.blouse_design}</MetaChip>}
+                <MetaChip>{g.outfit}</MetaChip>
+                <MetaChip>{g.fabric[0]}–{g.fabric[1]} m</MetaChip>
               </div>
             </article>
           ))}
