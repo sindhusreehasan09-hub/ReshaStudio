@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Resha Studio" },
-      { name: "description", content: "One saree. Endless possibilities. Turn your saree into a lehenga, anarkali, gown and more with AI." },
+      { name: "description", content: "One saree. Endless possibilities. Turn your saree into a lehenga, anarkali, gown and more." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

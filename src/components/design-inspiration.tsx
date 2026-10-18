@@ -26,7 +26,7 @@ export function DesignInspiration({ outfit, selectedId, onSelect }: {
       <div role="radiogroup" aria-label="Design inspiration" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
         <Button variant="ghost" role="radio" aria-checked={!selected} onClick={() => onSelect(null)} className={optionClass(!selected)}>
           <span className="flex h-20 w-full items-center justify-center"><Sparkles aria-hidden="true" /></span>
-          <span className="flex min-h-10 items-center px-2 py-1">AI Original Design</span>
+          <span className="flex min-h-10 items-center px-2 py-1">Original Design</span>
         </Button>
         {referencesForOutfit(outfit).map((r) => (
           <Button key={r.id} variant="ghost" role="radio" aria-checked={selected?.id === r.id} aria-label={r.designName} onClick={() => onSelect(r.id)} className={optionClass(selected?.id === r.id)}>
