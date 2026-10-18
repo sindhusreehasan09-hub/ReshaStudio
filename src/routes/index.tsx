@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { streamImage } from "@/lib/stream-image";
-import { buildRequestForm, DEFAULT_SLEEVE, SLEEVE_OPTIONS, type OutfitType, type SleeveDesign } from "@/lib/outfit-prompt";
+import { saveDesign, toThumbnail } from "@/lib/local-gallery";
+import { DEFAULT_SLEEVE, SLEEVE_OPTIONS, type OutfitType, type SleeveDesign } from "@/lib/outfit-prompt";
 import { DesignInspiration } from "@/components/design-inspiration";
 import { findDesignReference } from "@/lib/design-references";
 
@@ -12,7 +11,7 @@ export const Route = createFileRoute("/")({
       { title: "Resha Studio — One saree. Endless possibilities." },
       { name: "description", content: "Upload a saree photo and see it transformed into a beautiful lehenga design." },
       { property: "og:title", content: "Resha Studio" },
-      { property: "og:description", content: "One saree. Endless possibilities — turn your saree design into a beautiful outfit with AI." },
+      { property: "og:description", content: "One saree. Endless possibilities — turn your saree design into a beautiful outfit ." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -176,80 +175,30 @@ function Index() {
     setError(null);
     setResult(null);
     setIsFinal(false);
-    let genId: string | null = null;
     const look = outfitDesign === "suggest" ? suggestLook(audience, age) : null;
     const resolvedOutfit = look ? look.outfit : (outfitDesign as OutfitType);
     const resolvedBlouse = look ? look.blouse : blouseDesign;
     const resolvedMatchBlouse = look ? look.matchBlouse : matchBlouse;
     const resolvedMatchDupatta = look ? look.matchDupatta : matchDupatta;
     const matchingPieces = [resolvedMatchBlouse ? "blouse" : null, resolvedMatchDupatta ? "dupatta" : null].filter(Boolean).join(",");
-    const [fabricMin, fabricMax] = estimateFabric(audience, age, outfitDesign);
+    const fabric = estimateFabric(audience, age, outfitDesign);
     try {
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const up = await supabase.storage.from("saree-inputs").upload(path, file, { contentType: file.type });
-      if (up.error) throw up.error;
-      const ins = await supabase
-        .from("generations")
-        .insert({
-          original_image_url: `saree-inputs/${path}`,
-          audience,
-          age: audience === "Kids" ? age : null,
-          style,
-          model_type: modelType,
-          blouse_design: resolvedBlouse,
-          sleeve_design: sleeveDesign,
-          outfit_type: resolvedOutfit,
-          matching_pieces: matchingPieces,
-          fabric_estimate_min: fabricMin,
-          fabric_estimate_max: fabricMax,
-          status: "processing",
-        })
-        .select("id")
-        .single();
-      genId = ins.data?.id ?? null;
-
-      const form = buildRequestForm(new File([file], path, { type: file.type }), {
-        audience,
-        age,
-        style,
-        outfit: resolvedOutfit,
-        modelType,
-        blouse: resolvedBlouse,
-        sleeve: sleeveDesign,
-        matchingBlouse: resolvedMatchBlouse,
-        matchingDupatta: resolvedMatchDupatta,
-        referenceId: selectedReference?.id,
-      });
-
-      setUsedConfig({
+      const config = {
         outfit: resolvedOutfit,
         blouse: BLOUSE_OPTIONS.find((b) => b.value === resolvedBlouse)?.label ?? resolvedBlouse,
         sleeve: SLEEVE_OPTIONS.find((s) => s.value === sleeveDesign)?.label ?? sleeveDesign,
         matching: matchingPieces ? matchingPieces.split(",").map((p) => `Matching ${p[0]!.toUpperCase()}${p.slice(1)}`).join(" + ") : "None",
         age: audience === "Kids" ? age : null,
-        inspiration: selectedReference?.designName ?? "AI Original Design",
-      });
-
-      let finalUrl = "";
-      await streamImage("/api/create-lehenga", form, (src, final) => {
-        setResult(src);
-        setIsFinal(final);
-        if (final) finalUrl = src;
-        setPhase("result");
-      });
-
-      const blob = await (await fetch(finalUrl)).blob();
-      const outPath = `${genId ?? crypto.randomUUID()}.png`;
-      await supabase.storage.from("lehenga-results").upload(outPath, blob, { contentType: "image/png" });
-      if (genId)
-        await supabase
-          .from("generations")
-          .update({ generated_image_url: `lehenga-results/${outPath}`, status: "completed" })
-          .eq("id", genId);
+        inspiration: selectedReference?.designName ?? "Original Design",
+      };
+      setUsedConfig(config);
+      const image = await toThumbnail(file);
+      saveDesign({ id: crypto.randomUUID(), created_at: new Date().toISOString(), audience, style, model_type: modelType, fabric, image, ...config });
+      setResult(preview);
+      setIsFinal(true);
+      setPhase("result");
     } catch (e) {
       console.error(e);
-      if (genId) await supabase.from("generations").update({ status: "failed" }).eq("id", genId);
       setError(ERROR_MSG);
       setPhase("form");
     }
@@ -303,12 +252,12 @@ function Index() {
           <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
             <img
               src={result}
-              alt="Generated lehenga"
+              alt="Your saree"
               className={`aspect-[2/3] w-full object-cover transition-[filter] duration-700 ${isFinal ? "blur-0" : "blur-2xl"}`}
             />
           </div>
           <p className="mt-3 text-center font-display text-xl text-primary">
-            {isFinal ? "Your saree has been transformed into a lehenga." : "Adding the finishing touches..."}
+            {isFinal ? "Your design plan is saved." : "Adding the finishing touches..."}
           </p>
           {isFinal && (
             <p className="mt-1.5 text-center text-sm text-muted-foreground">
