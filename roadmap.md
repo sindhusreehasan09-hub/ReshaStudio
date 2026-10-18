@@ -1,0 +1,1 @@
+- [x] Import Resha Studio app without AI or online storage; designs saved on device.
