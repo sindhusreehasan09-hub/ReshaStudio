@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { loadDesigns, type SavedDesign } from "@/lib/local-gallery";
+import { OutfitCarousel } from "@/components/outfit-carousel";
+import { createViewGenerator, retryMissingView, type OutfitView } from "@/lib/outfit-views";
+import { saveDesign, toThumbnail } from "@/lib/local-gallery";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -28,8 +32,27 @@ function MetaChip({ children }: { children: React.ReactNode }) {
 
 function Gallery() {
   const [items, setItems] = useState<Generation[] | null>(null);
+  const [selected, setSelected] = useState<Generation | null>(null);
+  const [busy, setBusy] = useState<OutfitView | null>(null);
+  const [retryError, setRetryError] = useState<string | null>(null);
   const error: string | null = null;
   useEffect(() => setItems(loadDesigns()), []);
+
+  const retry = async (view: OutfitView) => {
+    if (!selected?.source_image || !selected.selections || busy) return;
+    setBusy(view); setRetryError(null);
+    try {
+      const source = await (await fetch(selected.source_image)).blob();
+      const views = await retryMissingView({ front: selected.front_image, back: selected.back_image }, view, createViewGenerator(new File([source], "saree.jpg", { type: source.type }), selected.selections));
+      const src = views[view];
+      if (!src) return;
+      const image = await toThumbnail(await (await fetch(src)).blob(), 1200);
+      const updated = { ...selected, [view === "front" ? "front_image" : "back_image"]: image, image: view === "front" ? image : selected.image };
+      if (!saveDesign(updated)) setRetryError("This device has no space to save the new view.");
+      setSelected(updated); setItems(loadDesigns());
+    } catch (e) { setRetryError(e instanceof Error ? e.message : "This view could not be generated."); }
+    finally { setBusy(null); }
+  };
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 pb-8 pt-5">
@@ -61,15 +84,26 @@ function Gallery() {
         </section>
       )}
 
-      {items && items.length > 0 && (
+      {selected && <section className="mt-5">
+        <Button variant="ghost" disabled={Boolean(busy)} onClick={() => setSelected(null)}>← All designs</Button>
+        <OutfitCarousel key={selected.id} views={{ front: selected.front_image, back: selected.back_image }} legacyImage={selected.image} busy={busy} onRetry={selected.selections && selected.source_image ? retry : undefined} />
+        {retryError && <p role="alert" className="mt-2 text-sm text-destructive">{retryError}</p>}
+        <dl className="mt-3 space-y-1 text-sm text-muted-foreground">
+          <div>Outfit: {selected.outfit}</div><div>Sleeves: {selected.sleeve}</div><div>Blouse: {selected.blouse}</div><div>Matching: {selected.matching}</div><div>Inspiration: {selected.inspiration}</div><div>Fabric: {selected.fabric[0]}–{selected.fabric[1]} m</div>
+        </dl>
+      </section>}
+      {!selected && items && items.length > 0 && (
         <section className="mt-5 grid grid-cols-2 gap-3">
           {items.map((g) => (
             <article key={g.id} className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+              <Button variant="ghost" className="h-auto w-full p-0" aria-label={`Open ${g.outfit} design`} onClick={() => { setSelected(g); setRetryError(null); }}>
               {g.image ? (
                 <img src={g.image} alt={`${g.style} lehenga for ${g.audience}`} className="aspect-[2/3] w-full object-cover" loading="lazy" />
               ) : (
                 <div className="aspect-[2/3] w-full animate-pulse bg-secondary" />
               )}
+              </Button>
+              {(g.front_image || g.back_image) && <p className="px-2.5 pt-2 text-xs text-primary">{g.front_image && g.back_image ? "Front + Back" : g.front_image ? "Front View" : "Back View"}</p>}
               <div className="flex flex-wrap gap-1 p-2.5">
                 <MetaChip>{g.audience}{g.age ? ` · ${g.age.replace(" years", "y")}` : ""}</MetaChip>
                 <MetaChip>{g.style}</MetaChip>
