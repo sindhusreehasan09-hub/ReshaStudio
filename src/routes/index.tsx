@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { saveDesign, toThumbnail } from "@/lib/local-gallery";
-import { DEFAULT_SLEEVE, SLEEVE_OPTIONS, type OutfitType, type SleeveDesign } from "@/lib/outfit-prompt";
+import { saveDesign, toThumbnail, type SavedDesign } from "@/lib/local-gallery";
+import { DEFAULT_SLEEVE, SLEEVE_OPTIONS, type OutfitType, type SleeveDesign, type RequestSelections } from "@/lib/outfit-prompt";
+import { createViewGenerator, generateViews, retryMissingView, type OutfitViews, type OutfitView, type ViewErrors } from "@/lib/outfit-views";
+import { OutfitCarousel } from "@/components/outfit-carousel";
+import { Button } from "@/components/ui/button";
 import { DesignInspiration } from "@/components/design-inspiration";
 import { findDesignReference } from "@/lib/design-references";
 
@@ -148,6 +151,11 @@ function Index() {
   const [sleeveDesign, setSleeveDesign] = useState<SleeveDesign>(DEFAULT_SLEEVE);
   const [phase, setPhase] = useState<"form" | "loading" | "result">("form");
   const [result, setResult] = useState<string | null>(null);
+  const [views, setViews] = useState<OutfitViews>({});
+  const [viewErrors, setViewErrors] = useState<ViewErrors>({});
+  const [busyView, setBusyView] = useState<OutfitView | null>(null);
+  const [currentView, setCurrentView] = useState<OutfitView>("front");
+  const [record, setRecord] = useState<SavedDesign | null>(null);
   const [usedConfig, setUsedConfig] = useState<{ outfit: string; blouse: string; sleeve: string; matching: string; age: string | null; inspiration: string } | null>(null);
   const [isFinal, setIsFinal] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,6 +182,8 @@ function Index() {
     setPhase("loading");
     setError(null);
     setResult(null);
+    setViews({});
+    setViewErrors({});
     setIsFinal(false);
     const look = outfitDesign === "suggest" ? suggestLook(audience, age) : null;
     const resolvedOutfit = look ? look.outfit : (outfitDesign as OutfitType);
@@ -192,23 +202,54 @@ function Index() {
         inspiration: selectedReference?.designName ?? "Original Design",
       };
       setUsedConfig(config);
-      const image = await toThumbnail(file);
-      saveDesign({ id: crypto.randomUUID(), created_at: new Date().toISOString(), audience, style, model_type: modelType, fabric, image, ...config });
-      setResult(preview);
+      const selections: RequestSelections = { audience, age, style, outfit: resolvedOutfit, modelType, blouse: resolvedBlouse, sleeve: sleeveDesign, matchingBlouse: resolvedMatchBlouse, matchingDupatta: resolvedMatchDupatta, referenceId: selectedReference?.id ?? null };
+      const generate = createViewGenerator(new File([file], "saree.jpg", { type: file.type }), selections);
+      const generated = await generateViews(generate, (view, src, final) => { setBusyView(view); setResult(src); setIsFinal(final); });
+      setViews(generated.views);
+      setViewErrors(generated.errors);
+      if (!generated.views.front && !generated.views.back) throw new Error(Object.values(generated.errors)[0] ?? ERROR_MSG);
+      const sourceImage = await toThumbnail(file, 1200);
+      const frontImage = generated.views.front ? await toThumbnail(await (await fetch(generated.views.front)).blob(), 1200) : undefined;
+      const backImage = generated.views.back ? await toThumbnail(await (await fetch(generated.views.back)).blob(), 1200) : undefined;
+      const saved: SavedDesign = { id: crypto.randomUUID(), created_at: new Date().toISOString(), audience, style, model_type: modelType, fabric, image: frontImage ?? backImage ?? "", front_image: frontImage, back_image: backImage, source_image: sourceImage, selections, ...config };
+      setRecord(saved);
+      if (!saveDesign(saved)) setError("Your views are ready, but this device has no space to save them. Download them before leaving.");
+      setResult(generated.views.front ?? generated.views.back ?? null);
       setIsFinal(true);
       setPhase("result");
     } catch (e) {
       console.error(e);
-      setError(ERROR_MSG);
+      setError(e instanceof Error ? e.message : ERROR_MSG);
       setPhase("form");
+    } finally {
+      setBusyView(null);
     }
   };
 
+  const retry = async (view: OutfitView) => {
+    if (!file || !record?.selections || busyView) return;
+    setBusyView(view);
+    setError(null);
+    try {
+      const updated = await retryMissingView(views, view, createViewGenerator(new File([file], "saree.jpg", { type: file.type }), record.selections));
+      setViews(updated);
+      setViewErrors(previous => ({ ...previous, [view]: undefined }));
+      const src = updated[view];
+      if (!src) return;
+      const image = await toThumbnail(await (await fetch(src)).blob(), 1200);
+      const saved = { ...record, [view === "front" ? "front_image" : "back_image"]: image, image: view === "front" ? image : record.image };
+      setRecord(saved);
+      if (!saveDesign(saved)) setError("This device has no space to save the new view. Download it before leaving.");
+    } catch (e) { setViewErrors(previous => ({ ...previous, [view]: e instanceof Error ? e.message : ERROR_MSG })); }
+    finally { setBusyView(null); }
+  };
+
   const download = () => {
-    if (!result) return;
+    const image = views[currentView];
+    if (!image) return;
     const a = document.createElement("a");
-    a.href = result;
-    a.download = "resha-studio.png";
+    a.href = image;
+    a.download = `resha-studio-${currentView}.png`;
     a.click();
   };
 
@@ -217,6 +258,9 @@ function Index() {
     setPreview(null);
     setWarning(null);
     setResult(null);
+    setViews({});
+    setRecord(null);
+    setViewErrors({});
     setError(null);
     setPhase("form");
   };
@@ -242,22 +286,18 @@ function Index() {
               {preview && <img src={preview} alt="" className="h-full w-full object-cover" />}
             </div>
           </div>
-          <h2 className="mt-8 text-3xl font-semibold text-primary">Saving your design...</h2>
+          <h2 className="mt-8 text-3xl font-semibold text-primary">Creating your outfit views...</h2>
           <p className="mt-2 text-sm text-muted-foreground">Preserving your saree's original design</p>
+          {result && <img src={result} alt="Outfit preview" className={`mt-5 aspect-[2/3] w-full object-contain transition-[filter] ${isFinal ? "blur-0" : "blur-2xl"}`} />}
         </section>
       )}
 
       {phase === "result" && result && (
         <section className="mt-4 flex flex-1 flex-col">
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
-            <img
-              src={result}
-              alt="Your saree"
-              className={`aspect-[2/3] w-full object-cover transition-[filter] duration-700 ${isFinal ? "blur-0" : "blur-2xl"}`}
-            />
-          </div>
+          <OutfitCarousel views={views} errors={viewErrors} busy={busyView} onRetry={retry} onCurrentView={setCurrentView} />
+          {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
           <p className="mt-3 text-center font-display text-xl text-primary">
-            {isFinal ? "Your design plan is saved." : "Adding the finishing touches..."}
+            {views.front && views.back ? "Your outfit, front and back." : "Your outfit view is ready."}
           </p>
           {isFinal && (
             <p className="mt-1.5 text-center text-sm text-muted-foreground">
@@ -279,15 +319,15 @@ function Index() {
           )}
           {isFinal && (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={create} className="rounded-full border border-primary px-4 py-3 text-sm font-medium text-primary">
+              <Button variant="outline" disabled={Boolean(busyView)} onClick={create} className="h-auto rounded-full border border-primary px-4 py-3 text-sm font-medium text-primary">
                 ↻ Try Again
-              </button>
-              <button onClick={download} className="bg-maroon rounded-full px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft">
+              </Button>
+              <Button disabled={!views[currentView]} onClick={download} className="bg-maroon h-auto rounded-full px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft">
                 ⬇ Download
-              </button>
-              <button onClick={reset} className="col-span-2 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4">
+              </Button>
+              <Button variant="ghost" disabled={Boolean(busyView)} onClick={reset} className="col-span-2 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4">
                 Create Another
-              </button>
+              </Button>
             </div>
           )}
         </section>

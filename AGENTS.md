@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Outfit generation uses streaming server-route edits and two ordered image calls with the first result as a continuity reference, because streaming multi-output view indexing is not documented.
+- Generation records and source photos remain device-only with optional front/back fields, preserving legacy records and permitting a single-view manual retry.
+- Store only AI access-block status in Lovable Cloud; never store design history there, and fail closed when the access guard cannot be read.
