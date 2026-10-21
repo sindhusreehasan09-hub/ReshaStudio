@@ -1,4 +1,5 @@
-// Designs are saved only in this browser (no online storage, no AI).
+import type { RequestSelections } from "./outfit-prompt";
+// Designs and source photos are saved only in this browser.
 export type SavedDesign = {
   id: string;
   created_at: string;
@@ -13,6 +14,10 @@ export type SavedDesign = {
   inspiration: string;
   fabric: [number, number];
   image: string;
+  front_image?: string;
+  back_image?: string;
+  source_image?: string;
+  selections?: RequestSelections;
 };
 
 const KEY = "resha-designs";
@@ -27,15 +32,16 @@ export function loadDesigns(): SavedDesign[] {
 }
 
 export function saveDesign(d: SavedDesign) {
-  let list = [d, ...loadDesigns()].slice(0, MAX);
+  let list = [d, ...loadDesigns().filter(item => item.id !== d.id)].slice(0, MAX);
   while (list.length) {
     try {
       localStorage.setItem(KEY, JSON.stringify(list));
-      return;
+      return true;
     } catch {
       list = list.slice(0, -1); // storage full: drop oldest
     }
   }
+  return false;
 }
 
 export async function toThumbnail(blob: Blob, max = 600): Promise<string> {
@@ -44,6 +50,9 @@ export async function toThumbnail(blob: Blob, max = 600): Promise<string> {
   const c = document.createElement("canvas");
   c.width = Math.round(bmp.width * k);
   c.height = Math.round(bmp.height * k);
-  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+  const context = c.getContext("2d");
+  if (!context) throw new Error("Could not save this image.");
+  context.drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close();
   return c.toDataURL("image/jpeg", 0.8);
 }
