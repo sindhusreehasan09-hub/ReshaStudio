@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Download, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import type { OutfitView, OutfitViews, ViewErrors } from "@/lib/outfit-views";
 
 export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry, onCurrentView }: {
   views: OutfitViews; errors?: ViewErrors; legacyImage?: string; busy?: OutfitView | null;
-  onRetry?: (view: OutfitView) => void; onCurrentView?: (view: OutfitView) => void;
+  onRetry?: ((view: OutfitView) => void) | undefined; onCurrentView?: (view: OutfitView) => void;
 }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);

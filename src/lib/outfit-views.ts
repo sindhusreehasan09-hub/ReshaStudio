@@ -2,8 +2,8 @@ import { buildRequestForm, type RequestSelections } from "./outfit-prompt";
 import { ImageRequestError, streamImage } from "./stream-image";
 
 export type OutfitView = "front" | "back";
-export type OutfitViews = { front?: string; back?: string };
-export type ViewErrors = Partial<Record<OutfitView, string>>;
+export type OutfitViews = { front?: string | undefined; back?: string | undefined };
+export type ViewErrors = Partial<Record<OutfitView, string | undefined>>;
 export type ViewGenerator = (view: OutfitView, counterpart?: string, onFrame?: (src: string, final: boolean) => void) => Promise<string>;
 
 export function createViewGenerator(source: File, selections: RequestSelections): ViewGenerator {

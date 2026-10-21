@@ -14,8 +14,8 @@ export type SavedDesign = {
   inspiration: string;
   fabric: [number, number];
   image: string;
-  front_image?: string;
-  back_image?: string;
+  front_image?: string | undefined;
+  back_image?: string | undefined;
   source_image?: string;
   selections?: RequestSelections;
 };

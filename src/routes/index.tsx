@@ -202,7 +202,7 @@ function Index() {
         inspiration: selectedReference?.designName ?? "Original Design",
       };
       setUsedConfig(config);
-      const selections: RequestSelections = { audience, age, style, outfit: resolvedOutfit, modelType, blouse: resolvedBlouse, sleeve: sleeveDesign, matchingBlouse: resolvedMatchBlouse, matchingDupatta: resolvedMatchDupatta, referenceId: selectedReference?.id };
+      const selections: RequestSelections = { audience, age, style, outfit: resolvedOutfit, modelType, blouse: resolvedBlouse, sleeve: sleeveDesign, matchingBlouse: resolvedMatchBlouse, matchingDupatta: resolvedMatchDupatta, referenceId: selectedReference?.id ?? null };
       const generate = createViewGenerator(new File([file], "saree.jpg", { type: file.type }), selections);
       const generated = await generateViews(generate, (view, src, final) => { setBusyView(view); setResult(src); setIsFinal(final); });
       setViews(generated.views);
