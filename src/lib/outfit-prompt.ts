@@ -447,7 +447,24 @@ export function parsePromptInput(input: FormData): PromptInput {
     if (value && (value.length > 80 || /[\r\n]/.test(value))) throw new ValidationError(`Unsupported ${key}`);
     return value;
   };
-  return {
+  const catalog = <T extends string>(key: string, options: readonly { value: T }[]): T | null => {
+    const value = pick(input.get(key));
+    if (value == null) return null;
+    if (options.some((o) => o.value === value)) return value as T;
+    throw new ValidationError(`Unsupported ${key}`);
+  };
+  // Older saved designs sent free-text blouse colour/fabric; keep them working as custom values.
+  const legacyText = (key: string, options: readonly { value: string }[]): { value: string | null; custom: string | null } => {
+    const value = pick(input.get(key));
+    if (value == null) return { value: null, custom: null };
+    if (options.some((o) => o.value === value)) return { value, custom: explicitText(`${key}_custom`) };
+    if (value.length <= 80 && !/[\r\n]/.test(value)) return { value: "custom", custom: value };
+    throw new ValidationError(`Unsupported ${key}`);
+  };
+  const blouseColour = legacyText("blouse_colour", BLOUSE_COLOUR_OPTIONS);
+  const blouseFabric = legacyText("blouse_fabric", BLOUSE_FABRIC_OPTIONS);
+  const backDesign = catalog("back_design", BACK_DESIGNS);
+  const parsed: PromptInput = {
     audience: input.get("audience") === "Women" ? "Women" : "Kids",
     age: (pick(input.get("age")) ?? "5-7 years").slice(0, 20),
     style: Object.hasOwn(STYLES, style) ? style : "Flared",
@@ -458,9 +475,32 @@ export function parsePromptInput(input: FormData): PromptInput {
     matchingDupatta: input.get("matching_dupatta") === "true",
     mannequin: input.get("model_type") === "Dress/mannequin only",
     reference,
-    blouseColour: explicitText("blouse_colour"),
-    blouseFabric: explicitText("blouse_fabric"),
+    blouseFabric: blouseFabric.value as BlouseFabric | null,
+    blouseFabricCustom: blouseFabric.custom,
+    blouseColour: blouseColour.value as BlouseColour | null,
+    blouseColourCustom: blouseColour.custom,
+    blouseEmbellishment: catalog("blouse_embellishment", BLOUSE_EMBELLISHMENT_OPTIONS),
+    blouseEmbellishmentCustom: explicitText("blouse_embellishment_custom"),
+    dupattaFabric: catalog("dupatta_fabric", DUPATTA_FABRIC_OPTIONS),
+    dupattaFabricCustom: explicitText("dupatta_fabric_custom"),
+    dupattaColour: catalog("dupatta_colour", DUPATTA_COLOUR_OPTIONS),
+    dupattaColourCustom: explicitText("dupatta_colour_custom"),
+    dupattaDesign: catalog("dupatta_design", DUPATTA_DESIGN_OPTIONS),
+    dupattaDesignCustom: explicitText("dupatta_design_custom"),
+    dupattaDraping: catalog("dupatta_draping", DUPATTA_DRAPING_OPTIONS),
+    coordination: catalog("coordination", COORDINATION_PRESETS),
+    backDesign,
+    backDesignCustom: explicitText("back_design_custom"),
+    backDepth: catalog("back_depth", BACK_DEPTH_OPTIONS),
+    backClosure: catalog("back_closure", BACK_CLOSURE_OPTIONS),
+    backDori: catalog("back_dori", BACK_DORI_OPTIONS),
+    backTassels: catalog("back_tassels", BACK_TASSEL_OPTIONS),
+    backBorder: catalog("back_border", BACK_BORDER_OPTIONS),
+    backNotes: explicitText("back_notes"),
   };
+  if (parsed.dupattaFabric === "none" && (parsed.dupattaColour || parsed.dupattaDesign || parsed.dupattaDraping))
+    throw new ValidationError("Dupatta options need a dupatta fabric");
+  return parsed;
 }
 
 /** Builds the single generation prompt, ordered by priority: silhouette > sleeves > blouse > matching > textile. */
