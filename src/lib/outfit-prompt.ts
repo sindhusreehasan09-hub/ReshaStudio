@@ -597,6 +597,9 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
       ? `A child (girl), age ${p.age}. Age-appropriate proportions; modest, comfortable, festive children's ethnic wear. No deep necklines, bare midriff, or mature styling.`
       : "An adult woman. Elegant Indian ethnic fashion proportions.",
     "",
+    backLines.length ? "BLOUSE BACK CONSTRUCTION (must match exactly in the back view):" : null,
+    ...backLines,
+    backLines.length ? "" : null,
     "PRESENTATION:",
     p.mannequin
       ? "Show the outfit only on a dress form / mannequin, no human model, plain studio backdrop."
