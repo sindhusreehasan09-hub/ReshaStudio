@@ -514,14 +514,45 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
       : `Apply ${SLEEVE_PROMPTS[p.sleeve]} to ${spec.upper}.`;
   const blousePiece = spec.hasBlouse || p.matchingBlouse;
   const blouseTarget = spec.hasBlouse ? spec.upper : p.matchingBlouse ? "a separate matching blouse" : spec.upper;
-  const dupatta = p.matchingDupatta;
+  const label = (options: readonly { value: string; label: string }[], value: string | null | undefined) =>
+    options.find((o) => o.value === value)?.label ?? null;
+  const colourText = (options: readonly { value: string; label: string }[], value: string | null | undefined, custom: string | null | undefined) => {
+    if (!value) return null;
+    if (value === "custom") return custom ? `custom colour ${JSON.stringify(custom)}` : "a custom colour chosen by the user";
+    if (value === "contrast") return custom ? `contrast colour ${JSON.stringify(custom)}` : "a contrast colour that complements the saree";
+    return label(options, value);
+  };
+  const dupatta = p.dupattaFabric ? p.dupattaFabric !== "none" : p.matchingDupatta;
+  const back = findBackDesign(p.backDesign);
 
   const pieces: string[] = [];
   if (p.matchingBlouse && !spec.hasBlouse)
     pieces.push("Add a matching blouse/inner top cut from the same saree textile, layered appropriately for this outfit.");
-  if (dupatta) pieces.push("Include a matching dupatta made from the saree's pallu or original design.");
-  else pieces.push("Do NOT include a dupatta or any draped stole.");
+  if (dupatta) {
+    if (p.dupattaFabric && p.dupattaFabric !== "saree")
+      pieces.push(`Include a dupatta in ${p.dupattaFabric === "custom" ? `custom fabric ${JSON.stringify(p.dupattaFabricCustom ?? "")}` : label(DUPATTA_FABRIC_OPTIONS, p.dupattaFabric)}.`);
+    else pieces.push("Include a matching dupatta made from the saree's pallu or original design.");
+    const dupattaColour = colourText(DUPATTA_COLOUR_OPTIONS, p.dupattaColour, p.dupattaColourCustom);
+    if (dupattaColour) pieces.push(`Dupatta colour: ${dupattaColour}.`);
+    if (p.dupattaDesign) pieces.push(`Dupatta design: ${p.dupattaDesign === "custom" ? `custom design ${JSON.stringify(p.dupattaDesignCustom ?? "")}` : DUPATTA_DESIGN_PROMPTS[p.dupattaDesign]}.`);
+    if (p.dupattaDraping) pieces.push(`Dupatta draping: ${DUPATTA_DRAPING_PROMPTS[p.dupattaDraping]}.`);
+  } else pieces.push("Do NOT include a dupatta or any draped stole.");
   if (!spec.hasBlouse && !p.matchingBlouse) pieces.push("Do NOT add a separate choli or blouse.");
+  if (p.coordination === "stylist")
+    pieces.push("Choose a coordinated blouse and dupatta fabric/colour combination that best complements the uploaded saree.");
+  else if (p.coordination && p.coordination !== "custom")
+    pieces.push(`Colour coordination intent: ${COORDINATION_PRESETS.find((c) => c.value === p.coordination)?.description}`);
+
+  const backLines: string[] = [];
+  if (back) {
+    backLines.push(`Blouse back design: ${back.value === "custom" ? `custom design ${JSON.stringify(p.backDesignCustom ?? "")}` : back.prompt}. Render this exact back design in the back view; do not substitute a generic blouse back.`);
+    if (back.controls.includes("depth") && p.backDepth) backLines.push(`Back depth: ${label(BACK_DEPTH_OPTIONS, p.backDepth)}.`);
+    if (back.controls.includes("closure") && p.backClosure) backLines.push(`Back closure: ${label(BACK_CLOSURE_OPTIONS, p.backClosure)}.`);
+    if (back.controls.includes("dori") && p.backDori && p.backDori !== "none") backLines.push(`Dori style: ${label(BACK_DORI_OPTIONS, p.backDori)}.`);
+    if (back.controls.includes("tassels") && p.backTassels && p.backTassels !== "none") backLines.push(`Tassels: ${label(BACK_TASSEL_OPTIONS, p.backTassels)}.`);
+    if (back.controls.includes("border") && p.backBorder) backLines.push(`Back border/embellishment: ${label(BACK_BORDER_OPTIONS, p.backBorder)}.`);
+    if (p.backNotes) backLines.push(`Additional back-design instructions: ${JSON.stringify(p.backNotes)}.`);
+  }
 
   return [
     "Edit the provided saree image: redesign the saree textile into the outfit specified below. Follow the priorities in order; a higher priority always wins.",
