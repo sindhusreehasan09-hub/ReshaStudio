@@ -659,7 +659,27 @@ export function buildRequestForm(image: File, s: RequestSelections): FormData {
   form.append("matching_blouse", String(s.matchingBlouse));
   form.append("matching_dupatta", String(s.matchingDupatta));
   if (s.referenceId) form.append("design_reference_id", s.referenceId);
-  if (s.blouseColour) form.append("blouse_colour", s.blouseColour);
   if (s.blouseFabric) form.append("blouse_fabric", s.blouseFabric);
+  if (s.blouseFabricCustom) form.append("blouse_fabric_custom", s.blouseFabricCustom);
+  if (s.blouseColour) form.append("blouse_colour", s.blouseColour);
+  if (s.blouseColourCustom) form.append("blouse_colour_custom", s.blouseColourCustom);
+  if (s.blouseEmbellishment) form.append("blouse_embellishment", s.blouseEmbellishment);
+  if (s.blouseEmbellishmentCustom) form.append("blouse_embellishment_custom", s.blouseEmbellishmentCustom);
+  if (s.dupattaFabric) form.append("dupatta_fabric", s.dupattaFabric);
+  if (s.dupattaFabricCustom) form.append("dupatta_fabric_custom", s.dupattaFabricCustom);
+  if (s.dupattaColour) form.append("dupatta_colour", s.dupattaColour);
+  if (s.dupattaColourCustom) form.append("dupatta_colour_custom", s.dupattaColourCustom);
+  if (s.dupattaDesign) form.append("dupatta_design", s.dupattaDesign);
+  if (s.dupattaDesignCustom) form.append("dupatta_design_custom", s.dupattaDesignCustom);
+  if (s.dupattaDraping) form.append("dupatta_draping", s.dupattaDraping);
+  if (s.coordination) form.append("coordination", s.coordination);
+  if (s.backDesign) form.append("back_design", s.backDesign);
+  if (s.backDesignCustom) form.append("back_design_custom", s.backDesignCustom);
+  if (s.backDepth) form.append("back_depth", s.backDepth);
+  if (s.backClosure) form.append("back_closure", s.backClosure);
+  if (s.backDori) form.append("back_dori", s.backDori);
+  if (s.backTassels) form.append("back_tassels", s.backTassels);
+  if (s.backBorder) form.append("back_border", s.backBorder);
+  if (s.backNotes) form.append("back_notes", s.backNotes);
   return form;
 }
