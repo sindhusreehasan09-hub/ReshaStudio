@@ -576,8 +576,15 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
     blousePiece || !spec.hasBlouse
       ? `For ${blouseTarget}: ${BLOUSES[p.blouse]}. Sleeve choice from priority 2 overrides any sleeve style implied here.`
       : null,
-    p.blouseColour ? `EXPLICIT USER BLOUSE COLOUR: ${JSON.stringify(p.blouseColour)}. This overrides both reference colour and saree colour for the blouse/upper garment.` : null,
-    p.blouseFabric ? `EXPLICIT USER BLOUSE FABRIC: ${JSON.stringify(p.blouseFabric)}. This overrides both reference fabric and saree fabric for the blouse/upper garment.` : null,
+    p.blouseColour
+      ? `EXPLICIT USER BLOUSE COLOUR: ${colourText(BLOUSE_COLOUR_OPTIONS, p.blouseColour, p.blouseColourCustom)}. This overrides both reference colour and saree colour for the blouse/upper garment.`
+      : null,
+    p.blouseFabric && p.blouseFabric !== "saree"
+      ? `EXPLICIT USER BLOUSE FABRIC: ${p.blouseFabric === "custom" ? `custom fabric ${JSON.stringify(p.blouseFabricCustom ?? "")}` : BLOUSE_FABRIC_PROMPTS[p.blouseFabric]}. This overrides both reference fabric and saree fabric for the blouse/upper garment.`
+      : null,
+    p.blouseEmbellishment && p.blouseEmbellishment !== "plain"
+      ? `Blouse embellishment: ${p.blouseEmbellishment === "custom" ? `custom design ${JSON.stringify(p.blouseEmbellishmentCustom ?? "")}` : BLOUSE_EMBELLISHMENT_PROMPTS[p.blouseEmbellishment]}.`
+      : null,
     "",
     "PRIORITY 4 — MATCHING PIECES:",
     ...pieces,
