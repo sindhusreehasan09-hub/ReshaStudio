@@ -157,6 +157,240 @@ const STYLES: Record<string, string> = {
   Designer: "contemporary couture finishing with refined structured detailing",
 };
 
+// ---- Blouse / dupatta / coordination / back-design catalogs (shared by UI, server validation and prompt) ----
+
+export const BLOUSE_FABRIC_OPTIONS = [
+  { value: "saree", label: "Same as Saree" },
+  { value: "plain-silk", label: "Plain Silk" },
+  { value: "raw-silk", label: "Raw Silk" },
+  { value: "velvet", label: "Velvet" },
+  { value: "brocade", label: "Brocade" },
+  { value: "satin", label: "Satin" },
+  { value: "organza", label: "Organza" },
+  { value: "contrast", label: "Contrast Fabric" },
+  { value: "custom", label: "Custom Fabric" },
+] as const;
+export type BlouseFabric = (typeof BLOUSE_FABRIC_OPTIONS)[number]["value"];
+export const BLOUSE_FABRIC_PROMPTS: Record<BlouseFabric, string> = {
+  saree: "the same fabric as the saree",
+  "plain-silk": "plain silk",
+  "raw-silk": "raw silk with its natural slub texture",
+  velvet: "rich velvet",
+  brocade: "brocade with a woven pattern",
+  satin: "smooth satin",
+  organza: "sheer organza",
+  contrast: "a contrast fabric that complements the saree",
+  custom: "the custom fabric described by the user",
+};
+
+export const BLOUSE_COLOUR_OPTIONS = [
+  { value: "match", label: "Match Saree" },
+  { value: "contrast", label: "Contrast Colour" },
+  { value: "gold", label: "Gold" },
+  { value: "antique-gold", label: "Antique Gold" },
+  { value: "silver", label: "Silver" },
+  { value: "ivory", label: "Ivory / Cream" },
+  { value: "black", label: "Black" },
+  { value: "maroon", label: "Maroon" },
+  { value: "green", label: "Green" },
+  { value: "pink", label: "Pink" },
+  { value: "blue", label: "Blue" },
+  { value: "custom", label: "Custom Colour" },
+] as const;
+export type BlouseColour = (typeof BLOUSE_COLOUR_OPTIONS)[number]["value"];
+
+export const BLOUSE_EMBELLISHMENT_OPTIONS = [
+  { value: "plain", label: "Plain / Minimal" },
+  { value: "zari", label: "Zari Work" },
+  { value: "floral", label: "Floral Embroidery" },
+  { value: "mirror", label: "Mirror Work" },
+  { value: "beadwork", label: "Beadwork" },
+  { value: "lace", label: "Lace or Piping" },
+  { value: "brocade-panels", label: "Brocade Panels" },
+  { value: "sequin", label: "Sequin Work" },
+  { value: "custom", label: "Custom Design" },
+] as const;
+export type BlouseEmbellishment = (typeof BLOUSE_EMBELLISHMENT_OPTIONS)[number]["value"];
+export const BLOUSE_EMBELLISHMENT_PROMPTS: Record<BlouseEmbellishment, string> = {
+  plain: "plain and minimal, no heavy embellishment",
+  zari: "zari work",
+  floral: "floral embroidery",
+  mirror: "mirror work",
+  beadwork: "beadwork",
+  lace: "lace or piping detail",
+  "brocade-panels": "brocade panels",
+  sequin: "sequin work",
+  custom: "the custom embellishment described by the user",
+};
+
+export const DUPATTA_FABRIC_OPTIONS = [
+  { value: "none", label: "No Dupatta" },
+  { value: "saree", label: "Same Saree Fabric" },
+  { value: "silk", label: "Silk" },
+  { value: "chiffon", label: "Chiffon" },
+  { value: "georgette", label: "Georgette" },
+  { value: "organza", label: "Organza" },
+  { value: "net", label: "Net" },
+  { value: "velvet", label: "Velvet" },
+  { value: "banarasi", label: "Banarasi Brocade" },
+  { value: "custom", label: "Custom Fabric" },
+] as const;
+export type DupattaFabric = (typeof DUPATTA_FABRIC_OPTIONS)[number]["value"];
+
+export const DUPATTA_COLOUR_OPTIONS = [
+  { value: "match-saree", label: "Match Saree" },
+  { value: "match-blouse", label: "Match Blouse" },
+  { value: "contrast-saree", label: "Contrast with Saree" },
+  { value: "contrast-blouse", label: "Contrast with Blouse" },
+  { value: "gold", label: "Gold" },
+  { value: "antique-gold", label: "Antique Gold" },
+  { value: "silver", label: "Silver" },
+  { value: "ivory", label: "Ivory / Cream" },
+  { value: "custom", label: "Custom Colour" },
+] as const;
+export type DupattaColour = (typeof DUPATTA_COLOUR_OPTIONS)[number]["value"];
+
+export const DUPATTA_DESIGN_OPTIONS = [
+  { value: "plain-border", label: "Plain with Simple Border" },
+  { value: "zari-border", label: "Zari Border" },
+  { value: "heavy-embroidered", label: "Heavy Embroidered Border" },
+  { value: "floral-allover", label: "All-over Floral Embroidery" },
+  { value: "butti", label: "Butti Motifs" },
+  { value: "sequin", label: "Sequin Work" },
+  { value: "mirror", label: "Mirror Work" },
+  { value: "banarasi", label: "Banarasi Woven Pattern" },
+  { value: "ombre", label: "Ombre / Gradient" },
+  { value: "scalloped", label: "Scalloped Edge" },
+  { value: "tassels", label: "Tassels" },
+  { value: "custom", label: "Custom Design" },
+] as const;
+export type DupattaDesign = (typeof DUPATTA_DESIGN_OPTIONS)[number]["value"];
+export const DUPATTA_DESIGN_PROMPTS: Record<DupattaDesign, string> = {
+  "plain-border": "plain with a simple border",
+  "zari-border": "a zari border",
+  "heavy-embroidered": "a heavy embroidered border",
+  "floral-allover": "all-over floral embroidery",
+  butti: "scattered butti motifs",
+  sequin: "sequin work",
+  mirror: "mirror work",
+  banarasi: "a Banarasi woven pattern",
+  ombre: "an ombre / gradient shading",
+  scalloped: "a scalloped edge",
+  tassels: "decorative tassels on the edges",
+  custom: "the custom design described by the user",
+};
+
+export const DUPATTA_DRAPING_OPTIONS = [
+  { value: "one-shoulder", label: "One Shoulder" },
+  { value: "both-shoulders", label: "Both Shoulders" },
+  { value: "across-arms", label: "Across Both Arms" },
+  { value: "over-head", label: "Over the Head" },
+  { value: "pleated-side", label: "Pleated on One Side" },
+  { value: "bridal", label: "Traditional Bridal Drape" },
+  { value: "stylist", label: "✨ AI Stylist Choice" },
+] as const;
+export type DupattaDraping = (typeof DUPATTA_DRAPING_OPTIONS)[number]["value"];
+export const DUPATTA_DRAPING_PROMPTS: Record<DupattaDraping, string> = {
+  "one-shoulder": "draped over one shoulder",
+  "both-shoulders": "draped over both shoulders",
+  "across-arms": "draped across both arms",
+  "over-head": "draped over the head",
+  "pleated-side": "pleated neatly on one side",
+  bridal: "in a traditional bridal drape",
+  stylist: "draped in the way that best complements the outfit",
+};
+
+export type CoordinationPreset = "matching" | "blouse-contrast" | "dupatta-contrast" | "double-contrast" | "coordinated" | "festive-gold" | "custom" | "stylist";
+export const COORDINATION_PRESETS: { value: CoordinationPreset; label: string; description: string }[] = [
+  { value: "matching", label: "Matching Set", description: "Blouse and dupatta coordinate with the saree's main colour." },
+  { value: "blouse-contrast", label: "Blouse Contrast", description: "Contrast blouse with a saree-matching dupatta." },
+  { value: "dupatta-contrast", label: "Dupatta Contrast", description: "Saree-matching blouse with a contrasting dupatta." },
+  { value: "double-contrast", label: "Double Contrast", description: "Blouse and dupatta in different complementary colours." },
+  { value: "coordinated", label: "Coordinated Contrast", description: "Different fabrics or shades sharing complementary colours, borders or embellishments." },
+  { value: "festive-gold", label: "Festive Gold", description: "Contrasting blouse and dupatta with coordinated gold accents." },
+  { value: "custom", label: "Custom Combination", description: "Configure every fabric and colour independently." },
+  { value: "stylist", label: "✨ AI Stylist Choice", description: "Let the AI choose a coordinated combination for your saree." },
+];
+/** Fields a preset sets when applied. Explicit user edits afterwards are never overridden. */
+export const PRESET_APPLIES: Record<CoordinationPreset, Partial<Pick<PromptInput, "blouseFabric" | "blouseColour" | "blouseEmbellishment" | "dupattaFabric" | "dupattaColour" | "dupattaDesign">>> = {
+  matching: { blouseFabric: "saree", blouseColour: "match", dupattaFabric: "saree", dupattaColour: "match-saree" },
+  "blouse-contrast": { blouseColour: "contrast", dupattaColour: "match-saree" },
+  "dupatta-contrast": { blouseColour: "match", dupattaColour: "contrast-saree" },
+  "double-contrast": { blouseColour: "contrast", dupattaColour: "contrast-blouse" },
+  coordinated: { blouseColour: "contrast", dupattaColour: "contrast-blouse", dupattaDesign: "zari-border" },
+  "festive-gold": { blouseColour: "contrast", blouseEmbellishment: "zari", dupattaColour: "gold" },
+  custom: {},
+  stylist: {},
+};
+
+export type BackDesignControl = "depth" | "closure" | "dori" | "tassels" | "border";
+export type BackDesignOption = { value: string; label: string; description: string; prompt: string; controls: BackDesignControl[] };
+export const BACK_DESIGNS: BackDesignOption[] = [
+  { value: "deep-u", label: "Deep U-Back", description: "A classic deep U-shaped cut-out.", prompt: "a deep U-shaped back cut-out", controls: ["depth", "closure", "border"] },
+  { value: "deep-u-dori", label: "Deep U-Back with Dori", description: "Deep U-back finished with a tie-up dori.", prompt: "a deep U-shaped back with a dori tie at the top", controls: ["depth", "dori", "tassels", "border"] },
+  { value: "deep-v", label: "Deep V-Back", description: "A sharp deep V-shaped back neckline.", prompt: "a deep V-shaped back neckline", controls: ["depth", "closure", "border"] },
+  { value: "square", label: "Square Back", description: "A clean square-shaped back cut-out.", prompt: "a square-shaped back cut-out", controls: ["depth", "closure", "border"] },
+  { value: "round", label: "Round Back", description: "A soft round back neckline.", prompt: "a round back neckline", controls: ["depth", "closure", "border"] },
+  { value: "oval", label: "Oval Cut-Out", description: "An elegant oval cut-out at the back.", prompt: "an oval cut-out at the back", controls: ["depth", "closure", "border"] },
+  { value: "keyhole", label: "Teardrop / Keyhole Back", description: "A teardrop-shaped keyhole opening.", prompt: "a teardrop-shaped keyhole opening at the back", controls: ["closure", "border"] },
+  { value: "criss-cross", label: "Criss-Cross Dori", description: "Dori strings laced criss-cross across the back.", prompt: "criss-cross laced dori strings across an open back", controls: ["dori", "tassels", "border"] },
+  { value: "bow-tie", label: "Bow-Tie Back", description: "A statement bow tied at the back.", prompt: "a large bow tie at the back", controls: ["dori", "tassels", "border"] },
+  { value: "multi-dori", label: "Multiple Horizontal Dori Strings", description: "Several horizontal dori strings across the back.", prompt: "multiple horizontal dori strings across an open back", controls: ["dori", "tassels", "border"] },
+  { value: "single-dori-tassels", label: "Single Dori with Tassels", description: "One dori tie finished with tassels.", prompt: "a single dori tie with tassels at the back", controls: ["dori", "tassels", "border"] },
+  { value: "deep-scoop", label: "Deep Scoop Back", description: "A wide, deep scoop-shaped back.", prompt: "a deep scoop-shaped back neckline", controls: ["depth", "closure", "border"] },
+  { value: "sheer-net", label: "Sheer Net Back", description: "A closed back in sheer net fabric.", prompt: "a closed back panel of sheer net fabric", controls: ["closure", "border"] },
+  { value: "sheer-embroidered", label: "Sheer Embroidered Back", description: "Sheer back with embroidered motifs.", prompt: "a sheer back panel with embroidered motifs", controls: ["closure", "border"] },
+  { value: "high-neck-closed", label: "High-Neck Closed Back", description: "A fully closed high-neck back.", prompt: "a fully closed high-neck back", controls: ["closure"] },
+  { value: "boat-neck-closed", label: "Boat-Neck Closed Back", description: "A closed back with a boat neckline.", prompt: "a closed back with a boat neckline", controls: ["closure"] },
+  { value: "buttoned", label: "Buttoned Back", description: "A row of buttons down the back.", prompt: "a row of fabric buttons down the back", controls: ["closure", "border"] },
+  { value: "hook-eye", label: "Hook-and-Eye Closed Back", description: "A neat closed back with hook-and-eye fastening.", prompt: "a closed back with a concealed hook-and-eye fastening", controls: ["closure"] },
+  { value: "pot-neck", label: "Pot-Neck Back", description: "A round pot-shaped back cut-out.", prompt: "a pot-shaped (round) back cut-out", controls: ["depth", "closure", "border"] },
+  { value: "sweetheart", label: "Sweetheart-Shaped Back", description: "A sweetheart-shaped back neckline.", prompt: "a sweetheart-shaped back neckline", controls: ["depth", "closure", "border"] },
+  { value: "temple-bridal", label: "Traditional Temple / Bridal Back", description: "A rich bridal back with traditional detailing.", prompt: "a traditional temple-style bridal back with rich detailing", controls: ["depth", "closure", "dori", "tassels", "border"] },
+  { value: "custom", label: "Custom Back Design", description: "Describe your own back design.", prompt: "the custom back design described by the user", controls: ["depth", "closure", "dori", "tassels", "border"] },
+  { value: "ai", label: "✨ AI-Designed Back", description: "Let the AI design a back that suits the outfit.", prompt: "a blouse back design chosen by the stylist to best suit the outfit", controls: ["depth", "border"] },
+  { value: "keep", label: "Keep Existing Back Design", description: "Keep the back design from the saree or reference.", prompt: "the blouse back design already present in the source or reference", controls: [] },
+];
+export type BackDesignValue = (typeof BACK_DESIGNS)[number]["value"];
+export const findBackDesign = (value: string | null | undefined) => BACK_DESIGNS.find((d) => d.value === value) ?? null;
+
+export const BACK_DEPTH_OPTIONS = [
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "deep", label: "Deep" },
+  { value: "custom", label: "Custom" },
+] as const;
+export const BACK_CLOSURE_OPTIONS = [
+  { value: "hooks", label: "Hooks" },
+  { value: "buttons", label: "Buttons" },
+  { value: "zipper", label: "Zipper" },
+  { value: "dori", label: "Dori" },
+  { value: "concealed", label: "Concealed Closure" },
+] as const;
+export const BACK_DORI_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "single", label: "Single" },
+  { value: "double", label: "Double" },
+  { value: "criss-cross", label: "Criss-Cross" },
+  { value: "multiple", label: "Multiple Strings" },
+] as const;
+export const BACK_TASSEL_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "fabric", label: "Fabric Tassels" },
+  { value: "beaded", label: "Beaded Tassels" },
+  { value: "latkans", label: "Decorative Latkans" },
+] as const;
+export const BACK_BORDER_OPTIONS = [
+  { value: "plain-piping", label: "Plain Piping" },
+  { value: "contrast-piping", label: "Contrast Piping" },
+  { value: "zari", label: "Zari" },
+  { value: "lace", label: "Lace" },
+  { value: "embroidery", label: "Embroidery" },
+  { value: "mirror", label: "Mirror Work" },
+  { value: "beadwork", label: "Beadwork" },
+  { value: "custom", label: "Custom" },
+] as const;
+
 export type PromptInput = {
   audience: "Kids" | "Women";
   age: string;
