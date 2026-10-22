@@ -402,8 +402,28 @@ export type PromptInput = {
   matchingDupatta: boolean;
   mannequin: boolean;
   reference?: DesignReference | null;
-  blouseColour?: string | null;
-  blouseFabric?: string | null;
+  blouseFabric?: BlouseFabric | null;
+  blouseFabricCustom?: string | null;
+  blouseColour?: BlouseColour | null;
+  blouseColourCustom?: string | null;
+  blouseEmbellishment?: BlouseEmbellishment | null;
+  blouseEmbellishmentCustom?: string | null;
+  dupattaFabric?: DupattaFabric | null;
+  dupattaFabricCustom?: string | null;
+  dupattaColour?: DupattaColour | null;
+  dupattaColourCustom?: string | null;
+  dupattaDesign?: DupattaDesign | null;
+  dupattaDesignCustom?: string | null;
+  dupattaDraping?: DupattaDraping | null;
+  coordination?: CoordinationPreset | null;
+  backDesign?: BackDesignValue | null;
+  backDesignCustom?: string | null;
+  backDepth?: string | null;
+  backClosure?: string | null;
+  backDori?: string | null;
+  backTassels?: string | null;
+  backBorder?: string | null;
+  backNotes?: string | null;
 };
 
 export class ValidationError extends Error {}
