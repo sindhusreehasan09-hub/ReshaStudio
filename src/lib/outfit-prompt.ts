@@ -621,8 +621,28 @@ export type RequestSelections = {
   matchingBlouse: boolean;
   matchingDupatta: boolean;
   referenceId?: string | null;
-  blouseColour?: string | null;
-  blouseFabric?: string | null;
+  blouseFabric?: BlouseFabric | null;
+  blouseFabricCustom?: string | null;
+  blouseColour?: BlouseColour | null;
+  blouseColourCustom?: string | null;
+  blouseEmbellishment?: BlouseEmbellishment | null;
+  blouseEmbellishmentCustom?: string | null;
+  dupattaFabric?: DupattaFabric | null;
+  dupattaFabricCustom?: string | null;
+  dupattaColour?: DupattaColour | null;
+  dupattaColourCustom?: string | null;
+  dupattaDesign?: DupattaDesign | null;
+  dupattaDesignCustom?: string | null;
+  dupattaDraping?: DupattaDraping | null;
+  coordination?: CoordinationPreset | null;
+  backDesign?: BackDesignValue | null;
+  backDesignCustom?: string | null;
+  backDepth?: string | null;
+  backClosure?: string | null;
+  backDori?: string | null;
+  backTassels?: string | null;
+  backBorder?: string | null;
+  backNotes?: string | null;
 };
 
 /** Browser-side payload builder for the single generation request. */
