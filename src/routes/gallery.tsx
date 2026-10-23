@@ -5,6 +5,7 @@ import { OutfitCarousel } from "@/components/outfit-carousel";
 import { createViewGenerator, retryMissingView, type OutfitView } from "@/lib/outfit-views";
 import { saveDesign, toThumbnail } from "@/lib/local-gallery";
 import { Button } from "@/components/ui/button";
+import { CustomizationSummary } from "@/components/customization-summary";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -91,6 +92,7 @@ function Gallery() {
         <dl className="mt-3 space-y-1 text-sm text-muted-foreground">
           <div>Outfit: {selected.outfit}</div><div>Sleeves: {selected.sleeve}</div><div>Blouse: {selected.blouse}</div><div>Matching: {selected.matching}</div><div>Inspiration: {selected.inspiration}</div><div>Fabric: {selected.fabric[0]}–{selected.fabric[1]} m</div>
         </dl>
+        <div className="mt-3"><CustomizationSummary selections={selected.selections} /></div>
       </section>}
       {!selected && items && items.length > 0 && (
         <section className="mt-5 grid grid-cols-2 gap-3">

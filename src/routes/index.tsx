@@ -7,6 +7,9 @@ import { OutfitCarousel } from "@/components/outfit-carousel";
 import { Button } from "@/components/ui/button";
 import { DesignInspiration } from "@/components/design-inspiration";
 import { findDesignReference } from "@/lib/design-references";
+import { BlouseDupattaCustomization, DEFAULT_CUSTOMIZATION } from "@/components/blouse-dupatta-customization";
+import { BlouseBackGallery, DEFAULT_BACK_DESIGN } from "@/components/blouse-back-gallery";
+import { CustomizationSummary } from "@/components/customization-summary";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -148,6 +151,8 @@ function Index() {
   const [matchBlouse, setMatchBlouse] = useState(true);
   const [matchDupatta, setMatchDupatta] = useState(true);
   const [blouseDesign, setBlouseDesign] = useState<BlouseDesign>("match");
+  const [customization, setCustomization] = useState(DEFAULT_CUSTOMIZATION);
+  const [backDesign, setBackDesign] = useState(DEFAULT_BACK_DESIGN);
   const [sleeveDesign, setSleeveDesign] = useState<SleeveDesign>(DEFAULT_SLEEVE);
   const [phase, setPhase] = useState<"form" | "loading" | "result">("form");
   const [result, setResult] = useState<string | null>(null);
@@ -202,7 +207,13 @@ function Index() {
         inspiration: selectedReference?.designName ?? "Original Design",
       };
       setUsedConfig(config);
-      const selections: RequestSelections = { audience, age, style, outfit: resolvedOutfit, modelType, blouse: resolvedBlouse, sleeve: sleeveDesign, matchingBlouse: resolvedMatchBlouse, matchingDupatta: resolvedMatchDupatta, referenceId: selectedReference?.id ?? null };
+      const selections: RequestSelections = {
+        audience, age, style, outfit: resolvedOutfit, modelType, blouse: resolvedBlouse, sleeve: sleeveDesign,
+        matchingBlouse: resolvedMatchBlouse, matchingDupatta: resolvedMatchDupatta, referenceId: selectedReference?.id ?? null,
+        ...customization, backDesign: backDesign.design, backDesignCustom: backDesign.custom,
+        backDepth: backDesign.depth, backClosure: backDesign.closure, backDori: backDesign.dori,
+        backTassels: backDesign.tassels, backBorder: backDesign.border, backNotes: backDesign.notes,
+      };
       const generate = createViewGenerator(new File([file], "saree.jpg", { type: file.type }), selections);
       const generated = await generateViews(generate, (view, src, final) => { setBusyView(view); setResult(src); setIsFinal(final); });
       setViews(generated.views);
@@ -317,6 +328,7 @@ function Index() {
               <div className="flex justify-between gap-3 py-0.5"><dt>Inspiration</dt><dd className="text-right font-medium text-foreground">{usedConfig.inspiration}</dd></div>
             </dl>
           )}
+          {record && <div className="mt-3"><CustomizationSummary selections={record.selections} /></div>}
           {isFinal && (
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Button variant="outline" disabled={Boolean(busyView)} onClick={create} className="h-auto rounded-full border border-primary px-4 py-3 text-sm font-medium text-primary">
@@ -510,6 +522,9 @@ function Index() {
               ))}
             </div>
           </div>
+
+          <BlouseDupattaCustomization value={customization} onChange={setCustomization} />
+          <BlouseBackGallery value={backDesign} onChange={setBackDesign} />
 
           <div>
             <Label>Model</Label>

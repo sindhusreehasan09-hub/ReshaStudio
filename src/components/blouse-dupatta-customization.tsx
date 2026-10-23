@@ -17,6 +17,7 @@ import {
   type DupattaDraping,
   type DupattaFabric,
 } from "@/lib/outfit-prompt";
+import { Button } from "@/components/ui/button";
 
 export type CustomizationState = {
   coordination: CoordinationPreset | null;
@@ -65,20 +66,20 @@ function ChipRow<T extends string>({ options, value, onChange, ariaLabel }: {
   return (
     <div role="radiogroup" aria-label={ariaLabel} className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
       {options.map((o) => (
-        <button
+        <Button variant="outline"
           key={o.value}
           type="button"
           role="radio"
           aria-checked={value === o.value}
           onClick={() => onChange(value === o.value ? null : o.value)}
-          className={`shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
+            className={`h-auto shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
             value === o.value
               ? "border-primary bg-primary text-primary-foreground shadow-soft"
               : "border-border bg-card text-secondary-foreground hover:border-accent"
           }`}
         >
           {o.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -146,21 +147,21 @@ export function BlouseDupattaCustomization({ value, onChange }: {
         <Label>Colour Coordination</Label>
         <div role="radiogroup" aria-label="Colour coordination" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
           {COORDINATION_PRESETS.map((c) => (
-            <button
+            <Button variant="outline"
               key={c.value}
               type="button"
               role="radio"
               aria-checked={value.coordination === c.value}
               aria-label={`${c.label}: ${c.description}`}
               onClick={() => applyPreset(c.value)}
-              className={`shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
+              className={`h-auto shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
                 value.coordination === c.value
                   ? "border-primary bg-primary text-primary-foreground shadow-soft"
                   : "border-border bg-card text-secondary-foreground hover:border-accent"
               }`}
             >
               {c.label}
-            </button>
+            </Button>
           ))}
         </div>
         {value.coordination && (
@@ -170,7 +171,7 @@ export function BlouseDupattaCustomization({ value, onChange }: {
         )}
       </div>
 
-      <fieldset className="flex flex-col gap-3 rounded-2xl border border-border bg-card/50 p-3">
+      <fieldset className="flex min-w-0 flex-col gap-3 border-t border-border pt-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Blouse</legend>
         <div>
           <Label>Blouse Fabric</Label>
@@ -195,7 +196,7 @@ export function BlouseDupattaCustomization({ value, onChange }: {
         </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 rounded-2xl border border-border bg-card/50 p-3">
+      <fieldset className="flex min-w-0 flex-col gap-3 border-t border-border pt-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Dupatta Design</legend>
         <div>
           <Label>Dupatta Fabric</Label>

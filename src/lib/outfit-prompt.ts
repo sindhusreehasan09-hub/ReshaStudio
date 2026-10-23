@@ -498,8 +498,11 @@ export function parsePromptInput(input: FormData): PromptInput {
     backBorder: catalog("back_border", BACK_BORDER_OPTIONS),
     backNotes: explicitText("back_notes"),
   };
-  if (parsed.dupattaFabric === "none" && (parsed.dupattaColour || parsed.dupattaDesign || parsed.dupattaDraping))
-    throw new ValidationError("Dupatta options need a dupatta fabric");
+  if (parsed.dupattaFabric === "none") {
+    parsed.dupattaColour = null;
+    parsed.dupattaDesign = null;
+    parsed.dupattaDraping = null;
+  }
   return parsed;
 }
 
@@ -539,17 +542,17 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
   } else pieces.push("Do NOT include a dupatta or any draped stole.");
   if (!spec.hasBlouse && !p.matchingBlouse) pieces.push("Do NOT add a separate choli or blouse.");
   if (p.coordination === "stylist")
-    pieces.push("Choose a coordinated blouse and dupatta fabric/colour combination that best complements the uploaded saree.");
+    pieces.push("Choose coordinated colours/fabrics only for unspecified fields. Explicit user choices and no-dupatta always override stylist choices.");
   else if (p.coordination && p.coordination !== "custom")
-    pieces.push(`Colour coordination intent: ${COORDINATION_PRESETS.find((c) => c.value === p.coordination)?.description}`);
+    pieces.push(`Colour coordination intent: ${COORDINATION_PRESETS.find((c) => c.value === p.coordination)?.description}. Explicit field choices override this preset intent; never add an omitted dupatta.`);
 
   const backLines: string[] = [];
   if (back) {
-    backLines.push(`Blouse back design: ${back.value === "custom" ? `custom design ${JSON.stringify(p.backDesignCustom ?? "")}` : back.prompt}. Render this exact back design in the back view; do not substitute a generic blouse back.`);
+    backLines.push(`Blouse back design: ${back.value === "custom" ? `custom design ${JSON.stringify(p.backDesignCustom ?? "")}` : back.prompt}. Render this exact back design in the back view; do not substitute a generic blouse back. Apply it to ${spec.upper} without adding a separate blouse or changing the outfit silhouette.`);
     if (back.controls.includes("depth") && p.backDepth) backLines.push(`Back depth: ${label(BACK_DEPTH_OPTIONS, p.backDepth)}.`);
     if (back.controls.includes("closure") && p.backClosure) backLines.push(`Back closure: ${label(BACK_CLOSURE_OPTIONS, p.backClosure)}.`);
-    if (back.controls.includes("dori") && p.backDori && p.backDori !== "none") backLines.push(`Dori style: ${label(BACK_DORI_OPTIONS, p.backDori)}.`);
-    if (back.controls.includes("tassels") && p.backTassels && p.backTassels !== "none") backLines.push(`Tassels: ${label(BACK_TASSEL_OPTIONS, p.backTassels)}.`);
+    if (back.controls.includes("dori") && p.backDori) backLines.push(p.backDori === "none" ? "Do NOT add dori strings." : `Dori style: ${label(BACK_DORI_OPTIONS, p.backDori)}.`);
+    if (back.controls.includes("tassels") && p.backTassels) backLines.push(p.backTassels === "none" ? "Do NOT add tassels or latkans." : `Tassels: ${label(BACK_TASSEL_OPTIONS, p.backTassels)}.`);
     if (back.controls.includes("border") && p.backBorder) backLines.push(`Back border/embellishment: ${label(BACK_BORDER_OPTIONS, p.backBorder)}.`);
     if (p.backNotes) backLines.push(`Additional back-design instructions: ${JSON.stringify(p.backNotes)}.`);
   }
@@ -582,7 +585,7 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
     p.blouseFabric && p.blouseFabric !== "saree"
       ? `EXPLICIT USER BLOUSE FABRIC: ${p.blouseFabric === "custom" ? `custom fabric ${JSON.stringify(p.blouseFabricCustom ?? "")}` : BLOUSE_FABRIC_PROMPTS[p.blouseFabric]}. This overrides both reference fabric and saree fabric for the blouse/upper garment.`
       : null,
-    p.blouseEmbellishment && p.blouseEmbellishment !== "plain"
+    p.blouseEmbellishment
       ? `Blouse embellishment: ${p.blouseEmbellishment === "custom" ? `custom design ${JSON.stringify(p.blouseEmbellishmentCustom ?? "")}` : BLOUSE_EMBELLISHMENT_PROMPTS[p.blouseEmbellishment]}.`
       : null,
     "",
@@ -599,6 +602,7 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
     "",
     backLines.length ? "BLOUSE BACK CONSTRUCTION (must match exactly in the back view):" : null,
     ...backLines,
+    "FRONT/BACK CONTINUITY: use the same blouse fabric, colour, sleeves, neckline construction, embellishments, dupatta fabric/design/colour/drape, model and saree textile in both views. Back construction applies to the back only; never mirror the front. Position hair away from the blouse back so the selected construction remains visible. Explicit embellishment choices override older blouse-style decoration suggestions.",
     backLines.length ? "" : null,
     "PRESENTATION:",
     p.mannequin

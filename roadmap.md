@@ -1,5 +1,4 @@
 - [x] Import Resha Studio app without AI or online storage; designs saved on device.
-- [ ] Add cost-controlled matching front/back image generation and manual missing-view retry.
-- [ ] Resume implementation and verify image service availability without paid generation tests.
-- [ ] Add swipeable result/history views and backward-compatible device storage.
-- [ ] Test generation, partial failure, retry, navigation, swipe, and legacy history without real image charges.
+- [x] Add cost-controlled matching front/back generation, manual retry, swipe controls, and device history.
+- [x] Connect blouse, dupatta, coordination, and blouse-back customization to generation and saved summaries.
+- [x] Verify customization, persistence, legacy history, and call counts with mocked tests and browser checks (54 passing tests; build/type checks OK; no paid images).
