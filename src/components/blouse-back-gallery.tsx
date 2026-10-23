@@ -1,4 +1,5 @@
 import { ImageOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   BACK_BORDER_OPTIONS,
   BACK_CLOSURE_OPTIONS,
@@ -47,20 +48,20 @@ function ControlRow({ label, options, value, onChange }: {
       <Label>{label}</Label>
       <div role="radiogroup" aria-label={label} className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
         {options.map((o) => (
-          <button
+          <Button variant="outline"
             key={o.value}
             type="button"
             role="radio"
             aria-checked={value === o.value}
             onClick={() => onChange(value === o.value ? null : o.value)}
-            className={`shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
+            className={`h-auto shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
               value === o.value
                 ? "border-primary bg-primary text-primary-foreground shadow-soft"
                 : "border-border bg-card text-secondary-foreground hover:border-accent"
             }`}
           >
             {o.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -83,14 +84,14 @@ export function BlouseBackGallery({ value, onChange }: {
         {BACK_DESIGNS.map((d) => {
           const active = value.design === d.value;
           return (
-            <button
+            <Button variant="outline"
               key={d.value}
               type="button"
               role="radio"
               aria-checked={active}
               aria-label={`${d.label}: ${d.description}`}
               onClick={() => set("design", active ? null : d.value)}
-              className={`flex flex-col overflow-hidden rounded-xl border text-left transition-all ${
+              className={`h-auto min-w-0 flex-col gap-0 overflow-hidden whitespace-normal rounded-lg border p-0 text-left transition-all ${
                 active ? "border-primary bg-primary/10 ring-2 ring-primary" : "border-border bg-card hover:border-accent"
               }`}
             >
@@ -102,13 +103,13 @@ export function BlouseBackGallery({ value, onChange }: {
                 <span className={`text-xs font-semibold ${active ? "text-primary" : "text-foreground"}`}>{d.label}</span>
                 <span className="text-[10px] leading-tight text-muted-foreground">{d.description}</span>
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
 
       {selected && (
-        <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-border bg-card/50 p-3" aria-live="polite">
+        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3" aria-live="polite">
           {selected.value === "custom" && (
             <div>
               <Label>Describe Your Back Design</Label>
