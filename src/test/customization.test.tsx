@@ -18,7 +18,7 @@ describe("independent customization", () => {
   it("keeps blouse and dupatta colours independent", () => {
     render(<Controls />);
     fireEvent.click(within(screen.getByRole("group", { name: "Blouse" })).getByRole("radio", { name: "Black" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Silk", exact: true }));
+    fireEvent.click(screen.getByRole("radio", { name: /^Silk$/ }));
     fireEvent.click(within(screen.getByRole("group", { name: "Dupatta Design" })).getByRole("radio", { name: "Gold" }));
     expect(within(screen.getByRole("group", { name: "Blouse" })).getByRole("radio", { name: "Black" })).toHaveAttribute("aria-checked", "true");
     expect(parse({ blouseColour: "black", dupattaColour: "gold", dupattaFabric: "silk" })).toMatchObject({ blouseColour: "black", dupattaColour: "gold" });
