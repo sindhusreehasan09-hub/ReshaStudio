@@ -1,4 +1,4 @@
 - [x] Import Resha Studio app without AI or online storage; designs saved on device.
 - [x] Add cost-controlled matching front/back generation, manual retry, swipe controls, and device history.
-- [ ] Connect blouse, dupatta, coordination, and blouse-back customization to generation and saved summaries.
-- [ ] Verify customization, persistence, legacy history, and call counts with mocked tests and browser checks.
+- [x] Connect blouse, dupatta, coordination, and blouse-back customization to generation and saved summaries.
+- [x] Verify customization, persistence, legacy history, and call counts with mocked tests and browser checks (54 passing tests; build/type checks OK; no paid images).
