@@ -1,6 +1,6 @@
 import { BLOUSE_FABRIC_OPTIONS, BLOUSE_COLOUR_OPTIONS, BLOUSE_EMBELLISHMENT_OPTIONS, DUPATTA_FABRIC_OPTIONS, DUPATTA_COLOUR_OPTIONS, DUPATTA_DESIGN_OPTIONS, DUPATTA_DRAPING_OPTIONS, COORDINATION_PRESETS, findBackDesign, type RequestSelections } from "@/lib/outfit-prompt";
 
-export function CustomizationSummary({ selections }: { selections?: RequestSelections }) {
+export function CustomizationSummary({ selections }: { selections?: RequestSelections | undefined }) {
   if (!selections) return null;
   const s = selections;
   const label = (options: readonly { value: string; label: string }[], value?: string | null, custom?: string | null) => {

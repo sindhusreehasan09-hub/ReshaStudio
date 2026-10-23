@@ -548,7 +548,7 @@ export function buildPrompt(p: PromptInput, hasReferenceImage = false): string {
 
   const backLines: string[] = [];
   if (back) {
-    backLines.push(`Blouse back design: ${back.value === "custom" ? `custom design ${JSON.stringify(p.backDesignCustom ?? "")}` : back.prompt}. Render this exact back design in the back view; do not substitute a generic blouse back.`);
+    backLines.push(`Blouse back design: ${back.value === "custom" ? `custom design ${JSON.stringify(p.backDesignCustom ?? "")}` : back.prompt}. Render this exact back design in the back view; do not substitute a generic blouse back. Apply it to ${spec.upper} without adding a separate blouse or changing the outfit silhouette.`);
     if (back.controls.includes("depth") && p.backDepth) backLines.push(`Back depth: ${label(BACK_DEPTH_OPTIONS, p.backDepth)}.`);
     if (back.controls.includes("closure") && p.backClosure) backLines.push(`Back closure: ${label(BACK_CLOSURE_OPTIONS, p.backClosure)}.`);
     if (back.controls.includes("dori") && p.backDori) backLines.push(p.backDori === "none" ? "Do NOT add dori strings." : `Dori style: ${label(BACK_DORI_OPTIONS, p.backDori)}.`);
