@@ -287,7 +287,7 @@ export function Index() {
     setPhase("form");
   };
 
-  const reviewRows = [
+  const reviewRows: [string, string | undefined][] = [
     ["Outfit", outfitDesign === "suggest" ? "AI stylist choice" : outfitDesign],
     ["For", `${audience}${audience === "Kids" ? ` · ${age}` : ""}`],
     ["Silhouette", style], ["Blouse", BLOUSE_OPTIONS.find(b => b.value === blouseDesign)?.label],
