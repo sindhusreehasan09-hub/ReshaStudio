@@ -177,3 +177,5 @@
 .studio-main p, .studio-main dd { overflow-wrap: anywhere; }
 @media (max-width: 639px) { .studio-main { padding: 28px 20px 40px; } .studio-header { padding: 12px 0; } .studio-header nav button { padding: 8px; } .studio-header nav svg { display: none; } .progress-step { gap: 5px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+@media (max-width: 639px) { .studio-header a > span.font-display { font-size: 20px; } .studio-header nav a { font-size: 12px; padding: 8px; } }

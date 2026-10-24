@@ -41,17 +41,17 @@ describe("Guided studio", () => {
 
   it("retains outfit and independent colours across steps and submits the complete configuration once", async () => {
     render(<Index />); await customize();
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse", exact: true }));
-    fireEvent.click(screen.getByRole("radio", { name: "Black", exact: true }));
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Dupatta", exact: true }));
-    fireEvent.click(screen.getByRole("radio", { name: "Organza", exact: true }));
-    fireEvent.click(screen.getByRole("radio", { name: "Gold", exact: true }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Black" }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Dupatta" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Organza" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Gold" }));
     fireEvent.click(screen.getByRole("button", { name: "Review Design" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit outfit" }));
     expect(screen.getByRole("radio", { name: "Gown" })).toHaveAttribute("aria-checked", "true");
     fireEvent.click(screen.getByRole("button", { name: "Customize Design" }));
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse", exact: true }));
-    expect(screen.getByRole("radio", { name: "Black", exact: true })).toHaveAttribute("aria-checked", "true");
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse" }));
+    expect(screen.getByRole("radio", { name: "Black" })).toHaveAttribute("aria-checked", "true");
     fireEvent.click(screen.getByRole("button", { name: "Review Design" }));
     const button = screen.getByRole("button", { name: "Generate Outfit" });
     fireEvent.click(button); fireEvent.click(button);

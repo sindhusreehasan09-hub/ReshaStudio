@@ -18,9 +18,9 @@ import { OutfitIllustration } from "@/components/outfit-illustration";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Resha Studio — One saree. Endless possibilities." },
-      { name: "description", content: "Upload a saree photo and see it transformed into a beautiful lehenga design." },
-      { property: "og:title", content: "Resha Studio" },
+      { title: "Create Your Outfit — Resha Studio" },
+      { name: "description", content: "Design an outfit from your saree in four guided steps, with independent blouse and dupatta choices and matching front and back views." },
+      { property: "og:title", content: "Create Your Outfit — Resha Studio" },
       { property: "og:description", content: "One saree. Endless possibilities — turn your saree design into a beautiful outfit ." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -171,6 +171,7 @@ export function Index() {
   const [record, setRecord] = useState<SavedDesign | null>(null);
   const [usedConfig, setUsedConfig] = useState<{ outfit: string; blouse: string; sleeve: string; matching: string; age: string | null; inspiration: string } | null>(null);
   const [isFinal, setIsFinal] = useState(false);
+  const [savedOnDevice, setSavedOnDevice] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onPick = async (f?: File) => {
@@ -233,7 +234,8 @@ export function Index() {
       const backImage = generated.views.back ? await toThumbnail(await (await fetch(generated.views.back)).blob(), 1200) : undefined;
       const saved: SavedDesign = { id: crypto.randomUUID(), created_at: new Date().toISOString(), audience, style, model_type: modelType, fabric, image: frontImage ?? backImage ?? "", front_image: frontImage, back_image: backImage, source_image: sourceImage, selections, ...config };
       setRecord(saved);
-      if (!saveDesign(saved)) setError("Your views are ready, but this device has no space to save them. Download them before leaving.");
+      const stored = saveDesign(saved); setSavedOnDevice(stored);
+      if (!stored) setError("Your views are ready, but this device has no space to save them. Download them before leaving.");
       setResult(generated.views.front ?? generated.views.back ?? null);
       setIsFinal(true);
       setPhase("result");
@@ -346,7 +348,7 @@ export function Index() {
         </div>
       </>}
       {phase === "loading" && <section className="mx-auto max-w-lg py-14 text-center"><div className="mx-auto grid size-16 place-items-center rounded-full bg-secondary text-primary"><Sparkles className="size-6 animate-pulse" /></div><h1 className="mt-6 text-4xl">Your design is taking shape</h1><p className="mt-3 text-sm text-muted-foreground">Creating matching front and back views from your saree.</p>{result ? <img src={result} alt="Outfit preview" className={`mt-8 max-h-[650px] w-full object-contain ${isFinal ? "" : "blur-sm"}`} /> : preview && <img src={preview} alt="Your saree" className="mx-auto mt-8 max-h-80 rounded-lg object-contain" />}</section>}
-      {phase === "result" && result && <section><div className="mb-6"><p className="studio-eyebrow">YOUR RESHA DESIGN</p><h1 className="mt-2 text-4xl">{usedConfig?.outfit ?? "Your outfit"}</h1></div><div className="grid items-start gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"><OutfitCarousel views={views} errors={viewErrors} busy={busyView} onRetry={retry} onCurrentView={setCurrentView} /><div className="min-w-0"><p className="flex items-center gap-2 text-sm text-primary"><BookmarkCheck className="size-4" />Saved on this device</p><div className="mt-5 grid grid-cols-2 gap-3"><Button disabled={!views[currentView]} onClick={download}><Download />Download</Button><Button variant="outline" disabled={Boolean(busyView)} onClick={() => record && saveDesign(record)}><BookmarkCheck />Save</Button><Button variant="outline" disabled={Boolean(busyView)} onClick={create}><RotateCcw />Try Again</Button><Button variant="ghost" disabled={Boolean(busyView)} onClick={reset}><ImagePlus />Create New Outfit</Button></div>{error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}<Accordion className="mt-6" type="single" collapsible><AccordionItem value="details"><AccordionTrigger>Outfit details & fabric estimate</AccordionTrigger><AccordionContent><dl className="mb-5 space-y-3 text-sm">{usedConfig && Object.entries(usedConfig).filter(([, v]) => v).map(([k, v]) => <div key={k} className="grid grid-cols-[90px_minmax(0,1fr)] gap-4"><dt className="capitalize text-muted-foreground">{k}</dt><dd className="text-right">{v}</dd></div>)}<div className="flex justify-between"><dt>Fabric estimate</dt><dd>{record?.fabric.join("–")} m</dd></div></dl><CustomizationSummary selections={record?.selections} /></AccordionContent></AccordionItem></Accordion><Button asChild variant="link" className="mt-4"><Link to="/gallery">View all my designs<ArrowRight /></Link></Button></div></div></section>}
+      {phase === "result" && result && <section><div className="mb-6"><p className="studio-eyebrow">YOUR RESHA DESIGN</p><h1 className="mt-2 text-4xl">{usedConfig?.outfit ?? "Your outfit"}</h1></div><div className="grid items-start gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"><OutfitCarousel views={views} errors={viewErrors} busy={busyView} onRetry={retry} onCurrentView={setCurrentView} /><div className="min-w-0"><p className="flex items-center gap-2 text-sm text-primary"><BookmarkCheck className="size-4" />{savedOnDevice ? "Saved on this device" : "Not saved on this device"}</p><div className="mt-5 grid grid-cols-2 gap-3"><Button disabled={!views[currentView]} onClick={download}><Download />Download</Button><Button variant="outline" disabled={Boolean(busyView)} onClick={() => { if (record) { const stored = saveDesign(record); setSavedOnDevice(stored); setError(stored ? null : "This device has no space to save your design. Download it before leaving."); } }}><BookmarkCheck />Save</Button><Button variant="outline" disabled={Boolean(busyView)} onClick={create}><RotateCcw />Try Again</Button><Button variant="ghost" disabled={Boolean(busyView)} onClick={reset}><ImagePlus />Create New Outfit</Button></div>{error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}<Accordion className="mt-6" type="single" collapsible><AccordionItem value="details"><AccordionTrigger>Outfit details & fabric estimate</AccordionTrigger><AccordionContent><dl className="mb-5 space-y-3 text-sm">{usedConfig && Object.entries(usedConfig).filter(([, v]) => v).map(([k, v]) => <div key={k} className="grid grid-cols-[90px_minmax(0,1fr)] gap-4"><dt className="capitalize text-muted-foreground">{k}</dt><dd className="text-right">{v}</dd></div>)}<div className="flex justify-between"><dt>Fabric estimate</dt><dd>{record?.fabric.join("–")} m</dd></div></dl><CustomizationSummary selections={record?.selections} /></AccordionContent></AccordionItem></Accordion><Button asChild variant="link" className="mt-4"><Link to="/gallery">View all my designs<ArrowRight /></Link></Button></div></div></section>}
     </main>
   );
 }
