@@ -2,3 +2,7 @@
 - [x] Add cost-controlled matching front/back generation, manual retry, swipe controls, and device history.
 - [x] Connect blouse, dupatta, coordination, and blouse-back customization to generation and saved summaries.
 - [x] Verify customization, persistence, legacy history, and call counts with mocked tests and browser checks (54 passing tests; build/type checks OK; no paid images).
+- [ ] Replace long creation form with a four-step guided studio while preserving selections and requests.
+- [ ] Refresh shared navigation, focused results and device history gallery.
+- [ ] Test wizard validation, persistence, generation, carousel and history with mocked calls.
+- [ ] Post-generation garment edits and version history (previous request; not yet implemented).
