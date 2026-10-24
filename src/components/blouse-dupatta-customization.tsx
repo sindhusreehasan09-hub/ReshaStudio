@@ -125,9 +125,10 @@ function ColourPicker({ value, onChange }: { value: string; onChange: (value: st
   );
 }
 
-export function BlouseDupattaCustomization({ value, onChange }: {
+export function BlouseDupattaCustomization({ value, onChange, section = "all" }: {
   value: CustomizationState;
   onChange: (value: CustomizationState) => void;
+  section?: "all" | "blouse" | "dupatta" | "coordination";
 }) {
   const set = <K extends keyof CustomizationState>(key: K, v: CustomizationState[K]) => onChange({ ...value, [key]: v });
 
@@ -143,7 +144,7 @@ export function BlouseDupattaCustomization({ value, onChange }: {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
+      {(section === "all" || section === "coordination") && <div>
         <Label>Colour Coordination</Label>
         <div role="radiogroup" aria-label="Colour coordination" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
           {COORDINATION_PRESETS.map((c) => (
@@ -169,9 +170,9 @@ export function BlouseDupattaCustomization({ value, onChange }: {
             {COORDINATION_PRESETS.find((c) => c.value === value.coordination)?.description}
           </p>
         )}
-      </div>
+      </div>}
 
-      <fieldset className="flex min-w-0 flex-col gap-3 border-t border-border pt-3">
+      {(section === "all" || section === "blouse") && <fieldset className="flex min-w-0 flex-col gap-3 border-t border-border pt-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Blouse</legend>
         <div>
           <Label>Blouse Fabric</Label>
@@ -194,9 +195,9 @@ export function BlouseDupattaCustomization({ value, onChange }: {
             <CustomText value={value.blouseEmbellishmentCustom} onChange={(v) => set("blouseEmbellishmentCustom", v)} placeholder="Describe the embellishment" ariaLabel="Custom blouse embellishment" />
           )}
         </div>
-      </fieldset>
+      </fieldset>}
 
-      <fieldset className="flex min-w-0 flex-col gap-3 border-t border-border pt-3">
+      {(section === "all" || section === "dupatta") && <fieldset className="flex min-w-0 flex-col gap-3 border-t border-border pt-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Dupatta Design</legend>
         <div>
           <Label>Dupatta Fabric</Label>
@@ -228,7 +229,7 @@ export function BlouseDupattaCustomization({ value, onChange }: {
           </>
         )}
         {noDupatta && <p className="text-xs text-muted-foreground">No dupatta will be included. For outfits where a dupatta is not standard, a stole is only added if you choose one above.</p>}
-      </fieldset>
+      </fieldset>}
     </div>
   );
 }

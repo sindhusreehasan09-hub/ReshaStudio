@@ -65,16 +65,16 @@
 }
 
 :root {
-  --radius: 1.25rem;
+  --radius: 0.5rem;
   --background: oklch(0.975 0.014 85);
   --foreground: oklch(0.26 0.05 20);
   --card: oklch(0.99 0.008 85);
   --card-foreground: oklch(0.26 0.05 20);
   --popover: oklch(0.99 0.008 85);
   --popover-foreground: oklch(0.26 0.05 20);
-  --primary: oklch(0.42 0.15 15);
+  --primary: oklch(0.43 0.105 12);
   --primary-foreground: oklch(0.98 0.015 85);
-  --secondary: oklch(0.94 0.03 80);
+  --secondary: oklch(0.94 0.025 18);
   --secondary-foreground: oklch(0.32 0.08 20);
   --muted: oklch(0.95 0.018 82);
   --muted-foreground: oklch(0.5 0.04 40);
@@ -82,8 +82,8 @@
   --accent-foreground: oklch(0.26 0.05 20);
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.88 0.04 78);
-  --input: oklch(0.88 0.04 78);
+  --border: oklch(0.9 0.017 45);
+  --input: oklch(0.9 0.017 45);
   --ring: oklch(0.76 0.12 78);
   --gold: oklch(0.72 0.12 78);
   --gradient-maroon: linear-gradient(135deg, oklch(0.45 0.16 15), oklch(0.34 0.12 10));
@@ -163,3 +163,19 @@
 
 @keyframes shimmer-spin { to { transform: rotate(360deg); } }
 @utility animate-spin-slow { animation: shimmer-spin 6s linear infinite; }
+
+.studio-header { border-bottom: 1px solid var(--border); background: var(--card); padding: 18px 0; }
+.studio-main { max-width: 1152px; margin: 0 auto; padding: 40px 32px 64px; }
+.studio-eyebrow { color: var(--primary); font-size: 10px; font-weight: 600; letter-spacing: 0; }
+.studio-summary { position: sticky; top: 28px; border-left: 1px solid var(--border); padding-left: 28px; }
+.upload-zone { overflow: hidden; border: 1px dashed var(--primary); border-radius: 8px; background: var(--card); }
+.studio-select { width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 8px 12px; font-size: 14px; }
+.outfit-option { overflow: hidden; background: var(--card); }
+.studio-main button { min-height: 40px; }
+.studio-main [role="radio"] { border-radius: 6px; }
+.studio-main [role="radiogroup"] { max-width: 100%; }
+.studio-main p, .studio-main dd { overflow-wrap: anywhere; }
+@media (max-width: 639px) { .studio-main { padding: 28px 20px 40px; } .studio-header { padding: 12px 0; } .studio-header nav button { padding: 8px; } .studio-header nav svg { display: none; } .progress-step { gap: 5px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+@media (max-width: 639px) { .studio-header a > span.font-display { font-size: 20px; } .studio-header nav a { font-size: 12px; padding: 8px; } }

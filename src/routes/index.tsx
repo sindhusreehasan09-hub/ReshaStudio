@@ -10,13 +10,17 @@ import { findDesignReference } from "@/lib/design-references";
 import { BlouseDupattaCustomization, DEFAULT_CUSTOMIZATION } from "@/components/blouse-dupatta-customization";
 import { BlouseBackGallery, DEFAULT_BACK_DESIGN } from "@/components/blouse-back-gallery";
 import { CustomizationSummary } from "@/components/customization-summary";
+import { ArrowLeft, ArrowRight, Check, Upload, ImagePlus, Trash2, Sparkles, Download, RotateCcw, BookmarkCheck, Scissors } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { OutfitIllustration } from "@/components/outfit-illustration";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Resha Studio — One saree. Endless possibilities." },
-      { name: "description", content: "Upload a saree photo and see it transformed into a beautiful lehenga design." },
-      { property: "og:title", content: "Resha Studio" },
+      { title: "Create Your Outfit — Resha Studio" },
+      { name: "description", content: "Design an outfit from your saree in four guided steps, with independent blouse and dupatta choices and matching front and back views." },
+      { property: "og:title", content: "Create Your Outfit — Resha Studio" },
       { property: "og:description", content: "One saree. Endless possibilities — turn your saree design into a beautiful outfit ." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -117,7 +121,7 @@ async function prepareImage(file: File): Promise<{ blob: Blob; warning: string |
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
+    <Button variant="outline"
       type="button"
       onClick={onClick}
       className={`flex-1 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
@@ -127,7 +131,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       }`}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -135,7 +139,11 @@ function Label({ children }: { children: React.ReactNode }) {
   return <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{children}</p>;
 }
 
-function Index() {
+export function Index() {
+  const [step, setStep] = useState(1);
+  const [customTab, setCustomTab] = useState("outfit");
+  const requestLock = useRef(false);
+  const moveTo = (next: number) => { setStep(next); window.scrollTo({ top: 0, behavior: "instant" }); };
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -163,6 +171,7 @@ function Index() {
   const [record, setRecord] = useState<SavedDesign | null>(null);
   const [usedConfig, setUsedConfig] = useState<{ outfit: string; blouse: string; sleeve: string; matching: string; age: string | null; inspiration: string } | null>(null);
   const [isFinal, setIsFinal] = useState(false);
+  const [savedOnDevice, setSavedOnDevice] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onPick = async (f?: File) => {
@@ -183,7 +192,8 @@ function Index() {
   };
 
   const create = async () => {
-    if (!file) return;
+    if (!file || requestLock.current) return;
+    requestLock.current = true;
     setPhase("loading");
     setError(null);
     setResult(null);
@@ -224,7 +234,8 @@ function Index() {
       const backImage = generated.views.back ? await toThumbnail(await (await fetch(generated.views.back)).blob(), 1200) : undefined;
       const saved: SavedDesign = { id: crypto.randomUUID(), created_at: new Date().toISOString(), audience, style, model_type: modelType, fabric, image: frontImage ?? backImage ?? "", front_image: frontImage, back_image: backImage, source_image: sourceImage, selections, ...config };
       setRecord(saved);
-      if (!saveDesign(saved)) setError("Your views are ready, but this device has no space to save them. Download them before leaving.");
+      const stored = saveDesign(saved); setSavedOnDevice(stored);
+      if (!stored) setError("Your views are ready, but this device has no space to save them. Download them before leaving.");
       setResult(generated.views.front ?? generated.views.back ?? null);
       setIsFinal(true);
       setPhase("result");
@@ -233,6 +244,7 @@ function Index() {
       setError(e instanceof Error ? e.message : ERROR_MSG);
       setPhase("form");
     } finally {
+      requestLock.current = false;
       setBusyView(null);
     }
   };
@@ -265,6 +277,7 @@ function Index() {
   };
 
   const reset = () => {
+    moveTo(1);
     setFile(null);
     setPreview(null);
     setWarning(null);
@@ -276,276 +289,66 @@ function Index() {
     setPhase("form");
   };
 
+  const reviewRows: [string, string | undefined][] = [
+    ["Outfit", outfitDesign === "suggest" ? "AI stylist choice" : outfitDesign],
+    ["For", `${audience}${audience === "Kids" ? ` · ${age}` : ""}`],
+    ["Silhouette", style], ["Blouse", BLOUSE_OPTIONS.find(b => b.value === blouseDesign)?.label],
+    ["Sleeves", SLEEVE_OPTIONS.find(s => s.value === sleeveDesign)?.label],
+    ["Presentation", modelType], ["Reference", selectedReference?.designName ?? "Original design"],
+    ["Matching", [matchBlouse ? "Blouse" : "", matchDupatta ? "Dupatta" : ""].filter(Boolean).join(" & ") || "None"],
+  ];
+  const choices = <BlouseDupattaCustomization value={customization} onChange={setCustomization} section={customTab === "blouse" ? "blouse" : customTab === "dupatta" ? "dupatta" : "coordination"} />;
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 pb-6 pt-5">
-      <header className="text-center">
-        <h1 className="text-4xl font-semibold leading-none text-primary">
-          Resha <span className="text-gold">Studio</span>
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">One saree. Endless possibilities.</p>
-        <div className="divider-gold mx-auto mt-3 w-40" />
-        <Link to="/gallery" className="mt-2 inline-block text-xs font-medium text-muted-foreground underline underline-offset-4">
-          My Lehengas →
-        </Link>
-      </header>
-
-      {phase === "loading" && (
-        <section className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="relative h-32 w-32">
-            <div className="animate-spin-slow absolute inset-0 rounded-full border-2 border-dashed border-gold" />
-            <div className="absolute inset-3 overflow-hidden rounded-full border-4 border-card shadow-soft">
-              {preview && <img src={preview} alt="" className="h-full w-full object-cover" />}
-            </div>
-          </div>
-          <h2 className="mt-8 text-3xl font-semibold text-primary">Creating your outfit views...</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Preserving your saree's original design</p>
-          {result && <img src={result} alt="Outfit preview" className={`mt-5 aspect-[2/3] w-full object-contain transition-[filter] ${isFinal ? "blur-0" : "blur-2xl"}`} />}
-        </section>
-      )}
-
-      {phase === "result" && result && (
-        <section className="mt-4 flex flex-1 flex-col">
-          <OutfitCarousel views={views} errors={viewErrors} busy={busyView} onRetry={retry} onCurrentView={setCurrentView} />
-          {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
-          <p className="mt-3 text-center font-display text-xl text-primary">
-            {views.front && views.back ? "Your outfit, front and back." : "Your outfit view is ready."}
-          </p>
-          {isFinal && (
-            <p className="mt-1.5 text-center text-sm text-muted-foreground">
-              Estimated Saree Required:{" "}
-              <span className="font-semibold text-primary">
-                {estimateFabric(audience, age, outfitDesign)[0]}–{estimateFabric(audience, age, outfitDesign)[1]} metres
-              </span>
-            </p>
-          )}
-          {isFinal && usedConfig && (
-            <dl className="mt-3 rounded-2xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground shadow-soft">
-              <div className="flex justify-between py-0.5"><dt>Outfit</dt><dd className="font-medium text-foreground">{usedConfig.outfit}</dd></div>
-              {usedConfig.age && <div className="flex justify-between py-0.5"><dt>Age</dt><dd className="font-medium text-foreground">{usedConfig.age}</dd></div>}
-              <div className="flex justify-between py-0.5"><dt>Blouse</dt><dd className="font-medium text-foreground">{usedConfig.blouse}</dd></div>
-              <div className="flex justify-between py-0.5"><dt>Sleeves</dt><dd className="font-medium text-foreground">{usedConfig.sleeve}</dd></div>
-              <div className="flex justify-between py-0.5"><dt>Matching</dt><dd className="font-medium text-foreground">{usedConfig.matching}</dd></div>
-              <div className="flex justify-between gap-3 py-0.5"><dt>Inspiration</dt><dd className="text-right font-medium text-foreground">{usedConfig.inspiration}</dd></div>
-            </dl>
-          )}
-          {record && <div className="mt-3"><CustomizationSummary selections={record.selections} /></div>}
-          {isFinal && (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button variant="outline" disabled={Boolean(busyView)} onClick={create} className="h-auto rounded-full border border-primary px-4 py-3 text-sm font-medium text-primary">
-                ↻ Try Again
-              </Button>
-              <Button disabled={!views[currentView]} onClick={download} className="bg-maroon h-auto rounded-full px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft">
-                ⬇ Download
-              </Button>
-              <Button variant="ghost" disabled={Boolean(busyView)} onClick={reset} className="col-span-2 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4">
-                Create Another
-              </Button>
-            </div>
-          )}
-        </section>
-      )}
-
-      {phase === "form" && (
-        <section className="mt-4 flex flex-1 flex-col gap-4">
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            className="hidden"
-            onChange={(e) => {
-              onPick(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          {preview ? (
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
-              <img src={preview} alt="Your saree" className="h-56 w-full object-cover" />
-              <button
-                onClick={() => inputRef.current?.click()}
-                className="absolute bottom-3 right-3 rounded-full bg-card/90 px-3 py-1.5 text-xs font-medium text-primary shadow-soft backdrop-blur"
-              >
-                Change photo
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => inputRef.current?.click()}
-              className="flex h-48 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-accent bg-card text-center shadow-soft transition-colors hover:bg-secondary"
-            >
-              <span className="bg-maroon mb-3 flex h-12 w-12 items-center justify-center rounded-full text-xl text-primary-foreground">＋</span>
-              <span className="font-display text-2xl font-semibold text-primary">Upload Saree Photo</span>
-              <span className="mt-1 text-xs text-muted-foreground">Take a photo or choose from gallery</span>
-            </button>
-          )}
-          {warning && <p className="-mt-2 text-center text-xs text-accent-foreground">⚠ {warning}</p>}
-          {error && <p className="-mt-2 rounded-2xl bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">{error}</p>}
-
-          <div>
-            <Label>For</Label>
-            <div className="flex gap-2">
-              {(["Kids", "Women"] as const).map((a) => (
-                <Chip key={a} active={audience === a} onClick={() => setAudience(a)}>{a}</Chip>
-              ))}
-            </div>
-          </div>
-
-          {audience === "Kids" && (
-            <div>
-              <Label>Age</Label>
-              <select
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {AGES.map((a) => <option key={a}>{a}</option>)}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <Label>Lehenga Style</Label>
-            <div className="flex gap-2">
-              {STYLES.map((s) => (
-                <Chip key={s} active={style === s} onClick={() => setStyle(s)}>{s}</Chip>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>Outfit Design</Label>
-            <div
-              role="radiogroup"
-              aria-label="Outfit design"
-              className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
-            >
-              {OUTFITS.map((o) => (
-                <button
-                  key={o}
-                  type="button"
-                  role="radio"
-                  aria-checked={outfitDesign === o}
-                  onClick={() => { setOutfitDesign(o); setReferenceId(null); }}
-                  className={`shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
-                    outfitDesign === o
-                      ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                      : "border-border bg-card text-secondary-foreground hover:border-accent"
-                  }`}
-                >
-                  {o === "suggest" ? "✨ Suggest for me" : o}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <DesignInspiration outfit={inspirationOutfit} selectedId={selectedReference?.id ?? null} onSelect={setReferenceId} />
-          </div>
-
-          <div>
-            <Label>Matching</Label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                aria-pressed={matchBlouse}
-                onClick={() => setMatchBlouse((v) => !v)}
-                className={`flex-1 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
-                  matchBlouse
-                    ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                    : "border-border bg-card text-secondary-foreground hover:border-accent"
-                }`}
-              >
-                Matching Blouse
-              </button>
-              <button
-                type="button"
-                aria-pressed={matchDupatta}
-                onClick={() => setMatchDupatta((v) => !v)}
-                className={`flex-1 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
-                  matchDupatta
-                    ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                    : "border-border bg-card text-secondary-foreground hover:border-accent"
-                }`}
-              >
-                Matching Dupatta
-              </button>
-            </div>
-          </div>
-
-
-
-          <div>
-            <Label>Sleeve Design</Label>
-            <div role="radiogroup" aria-label="Sleeve design" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
-              {SLEEVE_OPTIONS.map((o) => (
-                <button
-                  key={o.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={sleeveDesign === o.value}
-                  aria-label={o.label}
-                  onClick={() => setSleeveDesign(o.value)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
-                    sleeveDesign === o.value
-                      ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                      : "border-border bg-card text-secondary-foreground hover:border-accent"
-                  }`}
-                >
-                  <span aria-hidden className="text-base leading-none">{o.icon}</span>
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>Blouse Design</Label>
-            <div
-              role="radiogroup"
-              aria-label="Blouse design"
-              className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
-            >
-              {BLOUSE_OPTIONS.map((b) => (
-                <button
-                  key={b.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={blouseDesign === b.value}
-                  onClick={() => setBlouseDesign(b.value)}
-                  className={`shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
-                    blouseDesign === b.value
-                      ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                      : "border-border bg-card text-secondary-foreground hover:border-accent"
-                  }`}
-                >
-                  {b.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <BlouseDupattaCustomization value={customization} onChange={setCustomization} />
-          <BlouseBackGallery value={backDesign} onChange={setBackDesign} />
-
-          <div>
-            <Label>Model</Label>
-            <div className="flex gap-2">
-              {MODELS.map((m) => (
-                <Chip key={m} active={modelType === m} onClick={() => setModelType(m)}>
-                  {m === "Fashion model" ? "Fashion model" : "Mannequin only"}
-                </Chip>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={create}
-            disabled={!file}
-            className="bg-maroon mt-auto rounded-full py-4 font-display text-xl font-semibold text-primary-foreground shadow-soft transition-opacity disabled:opacity-40"
-          >
-            ✨ Create Lehenga
-          </button>
-        </section>
-      )}
+    <main className="studio-main">
+      {phase === "form" && <>
+        <header className="mb-7 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
+          <div className="min-w-0"><p className="studio-eyebrow">THE DESIGN ATELIER</p><h1 className="mt-2 text-4xl font-semibold sm:text-5xl">Create your outfit</h1><p className="mt-2 text-sm text-muted-foreground">One saree. A new expression of you.</p></div>
+          <Scissors className="mb-2 hidden size-8 text-primary/50 sm:block" aria-hidden />
+        </header>
+        <nav aria-label="Design progress" className="mb-8 grid grid-cols-4 border-b border-border">
+          {["Saree", "Outfit", "Customize", "Generate"].map((name, i) => <Button key={name} variant="ghost" disabled={i > 0 && !file} aria-current={step === i + 1 ? "step" : undefined} onClick={() => moveTo(i + 1)} className={`progress-step h-auto min-w-0 rounded-none px-1 py-4 ${step === i + 1 ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}><span className={`grid size-6 shrink-0 place-items-center rounded-full text-xs ${step >= i + 1 ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{step > i + 1 ? <Check /> : i + 1}</span><span className="hidden sm:inline">{name}</span><span className="sm:hidden text-xs">{name}</span></Button>)}
+        </nav>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <section className="min-w-0">
+            <input ref={inputRef} type="file" aria-label="Saree photo" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={e => { onPick(e.target.files?.[0]); e.target.value = ""; }} />
+            {step === 1 && <>
+              <p className="studio-eyebrow">STEP 01 / YOUR TEXTILE</p><h2 className="mt-2 text-3xl font-semibold">It begins with your saree</h2>
+              <p className="mb-6 mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">Your saree’s colours, motifs and border become the textile of your new outfit.</p>
+              <div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); onPick(e.dataTransfer.files[0]); }} className="upload-zone">
+                {preview ? <><img src={preview} alt="Your saree" className="max-h-[440px] w-full object-contain" /><div className="flex justify-center gap-3 border-t border-border p-4"><Button variant="outline" onClick={() => inputRef.current?.click()}><ImagePlus />Replace</Button><Button variant="ghost" onClick={() => { setFile(null); setPreview(null); setWarning(null); }}><Trash2 />Remove</Button></div></> : <Button variant="ghost" onClick={() => inputRef.current?.click()} className="h-[330px] w-full flex-col gap-4 whitespace-normal hover:bg-secondary/50"><span className="grid size-16 place-items-center rounded-full bg-secondary text-primary"><Upload className="size-6" /></span><span className="font-display text-3xl text-foreground">Upload Saree Photo</span><span className="text-sm text-muted-foreground">Choose a photo or drag it here</span><span className="text-xs text-muted-foreground">JPG, PNG or WEBP</span></Button>}
+              </div>
+              {warning && <p className="mt-3 text-sm text-muted-foreground">{warning}</p>}
+            </>}
+            {step === 2 && <>
+              <p className="studio-eyebrow">STEP 02 / THE SILHOUETTE</p><h2 className="mb-6 mt-2 text-3xl font-semibold">Choose your outfit</h2>
+              <div className="mb-6 grid gap-4 sm:grid-cols-2"><div><Label>Designed for</Label><div className="flex gap-2">{(["Kids", "Women"] as const).map(a => <Chip key={a} active={audience === a} onClick={() => setAudience(a)}>{a}</Chip>)}</div></div>{audience === "Kids" && <div><Label>Age group</Label><select aria-label="Age group" value={age} onChange={e => setAge(e.target.value)} className="studio-select">{AGES.map(a => <option key={a}>{a}</option>)}</select></div>}</div>
+              <div role="radiogroup" aria-label="Outfit design" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">{OUTFITS.map(o => <Button key={o} variant="outline" role="radio" aria-checked={outfitDesign === o} onClick={() => { setOutfitDesign(o); setReferenceId(null); }} className={`outfit-option h-auto min-w-0 flex-col gap-0 whitespace-normal p-0 ${outfitDesign === o ? "border-primary ring-1 ring-primary" : ""}`}><span className="relative grid h-32 w-full place-items-center bg-secondary/45">{o === "suggest" ? <Sparkles className="size-9 text-primary" /> : <OutfitIllustration outfit={o} />}{outfitDesign === o && <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground"><Check className="size-3" /></span>}</span><span className="min-h-12 px-2 py-3 text-xs font-medium">{o === "suggest" ? "AI Stylist Choice" : o}</span></Button>)}</div>
+            </>}
+            {step === 3 && <>
+              <p className="studio-eyebrow">STEP 03 / MAKE IT YOURS</p><h2 className="mb-6 mt-2 text-3xl font-semibold">The details make the design</h2>
+              <Tabs value={customTab} onValueChange={setCustomTab}>
+                <TabsList className="mb-5 flex h-auto w-full justify-start gap-1 overflow-x-auto bg-secondary/70 p-1">{[["outfit", "Outfit & sleeves"], ["blouse", "Blouse"], ["back", "Blouse back"], ["dupatta", "Dupatta"], ["colours", "Colours & fabric"]].map(([id, name]) => <TabsTrigger className="min-h-10 shrink-0" key={id} value={id}>{name}</TabsTrigger>)}</TabsList>
+                <TabsContent value="outfit" className="space-y-6"><div><Label>Outfit style</Label><div className="flex gap-2">{STYLES.map(s => <Chip key={s} active={style === s} onClick={() => setStyle(s)}>{s}</Chip>)}</div></div><div><Label>Sleeve Design</Label><div role="radiogroup" aria-label="Sleeve design" className="flex flex-wrap gap-2">{SLEEVE_OPTIONS.map(o => <Button key={o.value} variant={sleeveDesign === o.value ? "default" : "outline"} role="radio" aria-checked={sleeveDesign === o.value} onClick={() => setSleeveDesign(o.value)}><span aria-hidden>{o.icon}</span>{o.label}</Button>)}</div></div><Accordion type="single" collapsible><AccordionItem value="reference"><AccordionTrigger>Design inspiration · optional</AccordionTrigger><AccordionContent><DesignInspiration outfit={inspirationOutfit} selectedId={selectedReference?.id ?? null} onSelect={setReferenceId} /></AccordionContent></AccordionItem><AccordionItem value="model"><AccordionTrigger>Model & presentation</AccordionTrigger><AccordionContent><div className="flex gap-2">{MODELS.map(m => <Chip key={m} active={modelType === m} onClick={() => setModelType(m)}>{m === "Fashion model" ? m : "Mannequin only"}</Chip>)}</div></AccordionContent></AccordionItem></Accordion></TabsContent>
+                <TabsContent value="blouse"><div className="mb-6"><Label>Blouse Design</Label><div role="radiogroup" aria-label="Blouse design" className="flex flex-wrap gap-2">{BLOUSE_OPTIONS.map(b => <Button key={b.value} variant={blouseDesign === b.value ? "default" : "outline"} role="radio" aria-checked={blouseDesign === b.value} onClick={() => setBlouseDesign(b.value)}>{b.label}</Button>)}</div></div>{choices}</TabsContent>
+                <TabsContent value="back"><Accordion type="single" collapsible><AccordionItem value="gallery"><AccordionTrigger>Choose a blouse back · optional</AccordionTrigger><AccordionContent><BlouseBackGallery value={backDesign} onChange={setBackDesign} /></AccordionContent></AccordionItem></Accordion></TabsContent>
+                <TabsContent value="dupatta">{choices}</TabsContent>
+                <TabsContent value="colours">{choices}<div className="mt-6"><Label>Saree fabric matching</Label><div className="flex gap-2"><Button variant={matchBlouse ? "default" : "outline"} aria-pressed={matchBlouse} onClick={() => setMatchBlouse(v => !v)}>Matching Blouse</Button><Button variant={matchDupatta ? "default" : "outline"} aria-pressed={matchDupatta} onClick={() => setMatchDupatta(v => !v)}>Matching Dupatta</Button></div></div></TabsContent>
+              </Tabs>
+            </>}
+            {step === 4 && <>
+              <p className="studio-eyebrow">STEP 04 / READY TO CREATE</p><h2 className="mb-6 mt-2 text-3xl font-semibold">Your design, considered</h2>
+              <div className="grid gap-6 sm:grid-cols-[150px_minmax(0,1fr)]">{preview && <div><img src={preview} alt="Your saree" className="aspect-[3/4] w-full rounded-lg object-cover" /><Button variant="ghost" onClick={() => moveTo(1)} className="mt-2 w-full">Edit saree</Button></div>}<div className="min-w-0"><div className="flex items-center justify-between border-b border-border pb-3"><h3 className="text-2xl">Design brief</h3><Button variant="ghost" onClick={() => moveTo(2)}>Edit outfit</Button></div><dl className="divide-y divide-border">{reviewRows.map(([name, val]) => <div key={name} className="grid grid-cols-[100px_minmax(0,1fr)] gap-3 py-3 text-sm"><dt className="text-muted-foreground">{name}</dt><dd className="text-right">{val}</dd></div>)}</dl></div></div>
+              <div className="mt-6 border-t border-border pt-4"><div className="mb-4 flex items-center justify-between"><h3 className="text-2xl">Finishing details</h3><Button variant="ghost" onClick={() => moveTo(3)}>Edit details</Button></div><CustomizationSummary selections={{ ...customization, backDesign: backDesign.design, backDesignCustom: backDesign.custom }} /><dl className="mt-4 space-y-2 text-sm text-muted-foreground">{[["Back depth", backDesign.depth], ["Closure", backDesign.closure], ["Dori", backDesign.dori], ["Tassels", backDesign.tassels], ["Back border", backDesign.border], ["Instructions", backDesign.notes]].filter(([, v]) => v).map(([k, v]) => <div className="flex justify-between gap-4" key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></div><p className="mt-6 text-sm text-muted-foreground">Two matching views will be generated. This may take a little time.</p>
+            </>}
+            {error && <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+            <footer className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-5"><Button variant="ghost" disabled={step === 1} onClick={() => moveTo(step - 1)}><ArrowLeft />Back</Button><Button className="min-h-12 px-5" onClick={() => step === 4 ? create() : moveTo(step + 1)} disabled={!file}>{step === 1 ? "Continue to Style" : step === 2 ? "Customize Design" : step === 3 ? "Review Design" : "Generate Outfit"}{step === 4 ? <Sparkles /> : <ArrowRight />}</Button></footer>
+          </section>
+          <aside className="studio-summary hidden lg:block"><p className="studio-eyebrow">YOUR DESIGN</p>{preview ? <img src={preview} alt="Saree textile preview" className="my-5 aspect-[4/3] w-full rounded-lg object-cover" /> : <div className="my-5 grid aspect-[4/3] place-items-center rounded-lg bg-secondary"><OutfitIllustration outfit={inspirationOutfit} /></div>}<h3 className="text-2xl">{outfitDesign === "suggest" ? "AI stylist choice" : outfitDesign}</h3><p className="mb-5 mt-1 text-sm text-muted-foreground">{audience}{audience === "Kids" ? ` · ${age}` : ""}</p><CustomizationSummary selections={{ ...customization, backDesign: backDesign.design }} /><div className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">Estimated fabric <span className="float-right font-medium text-foreground">{estimateFabric(audience, age, outfitDesign).join("–")} m</span></div></aside>
+        </div>
+      </>}
+      {phase === "loading" && <section className="mx-auto max-w-lg py-14 text-center"><div className="mx-auto grid size-16 place-items-center rounded-full bg-secondary text-primary"><Sparkles className="size-6 animate-pulse" /></div><h1 className="mt-6 text-4xl">Your design is taking shape</h1><p className="mt-3 text-sm text-muted-foreground">Creating matching front and back views from your saree.</p>{result ? <img src={result} alt="Outfit preview" className={`mt-8 max-h-[650px] w-full object-contain ${isFinal ? "" : "blur-sm"}`} /> : preview && <img src={preview} alt="Your saree" className="mx-auto mt-8 max-h-80 rounded-lg object-contain" />}</section>}
+      {phase === "result" && result && <section><div className="mb-6"><p className="studio-eyebrow">YOUR RESHA DESIGN</p><h1 className="mt-2 text-4xl">{usedConfig?.outfit ?? "Your outfit"}</h1></div><div className="grid items-start gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"><OutfitCarousel views={views} errors={viewErrors} busy={busyView} onRetry={retry} onCurrentView={setCurrentView} /><div className="min-w-0"><p className="flex items-center gap-2 text-sm text-primary"><BookmarkCheck className="size-4" />{savedOnDevice ? "Saved on this device" : "Not saved on this device"}</p><div className="mt-5 grid grid-cols-2 gap-3"><Button disabled={!views[currentView]} onClick={download}><Download />Download</Button><Button variant="outline" disabled={Boolean(busyView)} onClick={() => { if (record) { const stored = saveDesign(record); setSavedOnDevice(stored); setError(stored ? null : "This device has no space to save your design. Download it before leaving."); } }}><BookmarkCheck />Save</Button><Button variant="outline" disabled={Boolean(busyView)} onClick={create}><RotateCcw />Try Again</Button><Button variant="ghost" disabled={Boolean(busyView)} onClick={reset}><ImagePlus />Create New Outfit</Button></div>{error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}<Accordion className="mt-6" type="single" collapsible><AccordionItem value="details"><AccordionTrigger>Outfit details & fabric estimate</AccordionTrigger><AccordionContent><dl className="mb-5 space-y-3 text-sm">{usedConfig && Object.entries(usedConfig).filter(([, v]) => v).map(([k, v]) => <div key={k} className="grid grid-cols-[90px_minmax(0,1fr)] gap-4"><dt className="capitalize text-muted-foreground">{k}</dt><dd className="text-right">{v}</dd></div>)}<div className="flex justify-between"><dt>Fabric estimate</dt><dd>{record?.fabric.join("–")} m</dd></div></dl><CustomizationSummary selections={record?.selections} /></AccordionContent></AccordionItem></Accordion><Button asChild variant="link" className="mt-4"><Link to="/gallery">View all my designs<ArrowRight /></Link></Button></div></div></section>}
     </main>
   );
 }
