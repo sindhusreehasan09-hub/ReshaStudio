@@ -9,6 +9,8 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Scissors, Plus, LayoutGrid } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -122,7 +124,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <header className="studio-header"><div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:px-8"><Link to="/" className="flex min-w-0 items-center gap-2.5 text-primary"><Scissors className="size-5 shrink-0" /><span className="truncate font-display text-2xl font-semibold">Resha Studio</span></Link><nav aria-label="Main navigation" className="flex shrink-0 gap-1 sm:gap-4"><Button asChild variant="ghost"><Link to="/" activeProps={{ className: "bg-secondary text-primary" }}><Plus /><span>Create</span></Link></Button><Button asChild variant="ghost"><Link to="/gallery" activeProps={{ className: "bg-secondary text-primary" }}><LayoutGrid /><span>My Designs</span></Link></Button></nav></div></header>
       <Outlet />
     </QueryClientProvider>
   );
