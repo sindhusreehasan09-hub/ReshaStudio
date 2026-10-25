@@ -142,6 +142,23 @@ function Label({ children }: { children: React.ReactNode }) {
   return <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{children}</p>;
 }
 
+function SectionCard({ value, number, title, summary, children }: { value: string; number: number; title: string; summary: string; children: React.ReactNode }) {
+  return (
+    <AccordionItem value={value} className="rounded-xl border border-border bg-card px-4 shadow-soft">
+      <AccordionTrigger className="gap-3 py-4 hover:no-underline">
+        <span className="flex min-w-0 flex-1 items-center gap-3 text-left">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-primary">{number}</span>
+          <span className="min-w-0">
+            <span className="block text-base font-semibold text-foreground">{title}</span>
+            <span className="block truncate text-xs font-normal text-muted-foreground">{summary}</span>
+          </span>
+        </span>
+      </AccordionTrigger>
+      <AccordionContent className="space-y-6 pb-5">{children}</AccordionContent>
+    </AccordionItem>
+  );
+}
+
 export function Index() {
   const [step, setStep] = useState(1);
   const [customSection, setCustomSection] = useState("outfit");
@@ -302,7 +319,16 @@ export function Index() {
     ["Presentation", modelType], ["Reference", selectedReference?.designName ?? "Original design"],
     ["Matching", [(reviewLook?.matchBlouse ?? matchBlouse) ? "Blouse" : "", (reviewLook?.matchDupatta ?? matchDupatta) ? "Dupatta" : ""].filter(Boolean).join(" & ") || "None"],
   ];
-  const choices = <BlouseDupattaCustomization value={customization} onChange={setCustomization} section={customTab === "blouse" ? "blouse" : customTab === "dupatta" ? "dupatta" : "coordination"} />;
+  const optLabel = (options: readonly { value: string; label: string }[], value?: string | null, custom?: string | null) => {
+    if (!value) return null;
+    const name = options.find(o => o.value === value)?.label ?? value;
+    return custom && ["custom", "contrast"].includes(value) ? `${name}: ${custom}` : name;
+  };
+  const outfitSummary = [outfitDesign === "suggest" ? "AI stylist choice" : outfitDesign, style, SLEEVE_OPTIONS.find(s => s.value === sleeveDesign)?.label].filter(Boolean).join(" · ");
+  const blouseSummary = [BLOUSE_OPTIONS.find(b => b.value === blouseDesign)?.label, optLabel(BLOUSE_FABRIC_OPTIONS, customization.blouseFabric, customization.blouseFabricCustom), optLabel(BLOUSE_COLOUR_OPTIONS, customization.blouseColour, customization.blouseColourCustom), optLabel(BLOUSE_EMBELLISHMENT_OPTIONS, customization.blouseEmbellishment, customization.blouseEmbellishmentCustom)].filter(Boolean).join(" · ");
+  const backSummary = backDesign.design ? (backDesign.design === "custom" ? backDesign.custom || "Custom back design" : findBackDesign(backDesign.design)?.label ?? "Custom back design") : "Simple back · no special design";
+  const dupattaSummary = customization.dupattaFabric === "none" ? "No dupatta" : [optLabel(COORDINATION_PRESETS, customization.coordination), optLabel(DUPATTA_FABRIC_OPTIONS, customization.dupattaFabric, customization.dupattaFabricCustom), optLabel(DUPATTA_COLOUR_OPTIONS, customization.dupattaColour, customization.dupattaColourCustom), optLabel(DUPATTA_DESIGN_OPTIONS, customization.dupattaDesign, customization.dupattaDesignCustom)].filter(Boolean).join(" · ") || "Matches the saree";
+  const applyStylist = () => { setBlouseDesign("suggest"); setCustomization({ ...customization, coordination: "stylist", dupattaDraping: customization.dupattaDraping ?? "stylist" }); };
 
   return (
     <main className="studio-main">
