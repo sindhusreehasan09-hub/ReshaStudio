@@ -22,8 +22,9 @@ async function customize() {
 describe("Guided studio", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue({ width: 600, height: 600 }));
+    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue({ width: 600, height: 600, close: vi.fn() }));
     URL.createObjectURL = vi.fn(() => "blob:saree");
+    URL.revokeObjectURL = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage: vi.fn(), getImageData: () => ({ data: new Uint8ClampedArray(16) }) } as any);
     mocks.generator.mockReturnValue(vi.fn());
     mocks.save.mockReturnValue(true);
@@ -70,5 +71,27 @@ describe("Guided studio", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Unavailable");
     expect(mocks.generate).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "Generate Outfit" })).toBeEnabled();
+  });
+
+  it("removes the photo and blocks further steps without a generation request", async () => {
+    render(<Index />); await upload();
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    expect(screen.getByRole("button", { name: "Continue to Style" })).toBeDisabled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:saree");
+    expect(mocks.generator).not.toHaveBeenCalled();
+  });
+
+  it("submits the resolved stylist choices while preserving independent customization", async () => {
+    render(<Index />); await upload();
+    fireEvent.click(screen.getByRole("button", { name: "Continue to Style" }));
+    fireEvent.click(screen.getByRole("button", { name: "Women", exact: true }));
+    fireEvent.click(screen.getByRole("radio", { name: "AI Stylist Choice" }));
+    fireEvent.click(screen.getByRole("button", { name: "Customize Design" }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse", exact: true }));
+    fireEvent.click(screen.getByRole("radio", { name: "Black", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Design" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate Outfit" }));
+    await waitFor(() => expect(mocks.generator).toHaveBeenCalledTimes(1));
+    expect(mocks.generator.mock.calls[0]?.[1]).toMatchObject({ outfit: "Anarkali", blouse: "embroidered", matchingBlouse: true, matchingDupatta: true, blouseColour: "black" });
   });
 });

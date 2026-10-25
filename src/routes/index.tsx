@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { saveDesign, toThumbnail, type SavedDesign } from "@/lib/local-gallery";
 import { DEFAULT_SLEEVE, SLEEVE_OPTIONS, type OutfitType, type SleeveDesign, type RequestSelections } from "@/lib/outfit-prompt";
 import { createViewGenerator, generateViews, retryMissingView, type OutfitViews, type OutfitView, type ViewErrors } from "@/lib/outfit-views";
@@ -58,7 +58,7 @@ const OUTFIT_FABRIC: Record<Exclude<OutfitDesign, "suggest">, [number, number]> 
 };
 const estimateFabric = (audience: Audience, age: string, outfit: OutfitDesign): [number, number] => {
   const key: Exclude<OutfitDesign, "suggest"> = outfit === "suggest" ? suggestLook(audience, age).outfit : outfit;
-  return audience === "Kids" ? (KIDS_FABRIC[age] ?? KIDS_FABRIC["5-7 years"]!) : OUTFIT_FABRIC[key] ?? OUTFIT_FABRIC.Lehenga!;
+  return audience === "Kids" ? (KIDS_FABRIC[age] ?? [2.5, 3]) : OUTFIT_FABRIC[key];
 };
 type SuggestedLook = { outfit: Exclude<OutfitDesign, "suggest">; blouse: BlouseDesign; matchBlouse: boolean; matchDupatta: boolean };
 const suggestLook = (audience: Audience, age: string): SuggestedLook => {
@@ -95,13 +95,14 @@ async function prepareImage(file: File): Promise<{ blob: Blob; warning: string |
   const c = document.createElement("canvas");
   c.width = Math.round(width * s);
   c.height = Math.round(height * s);
-  const ctx = c.getContext("2d")!;
+  const ctx = c.getContext("2d");
+  if (!ctx) throw new Error("Could not read this photo.");
   ctx.drawImage(bmp, 0, 0, c.width, c.height);
   const d = ctx.getImageData(0, 0, c.width, c.height).data;
   let sum = 0, sq = 0, n = 0;
   for (let i = 4; i < d.length; i += 4) {
-    const a = d[i]! * 0.3 + d[i + 1]! * 0.59 + d[i + 2]! * 0.11;
-    const b = d[i - 4]! * 0.3 + d[i - 3]! * 0.59 + d[i - 2]! * 0.11;
+    const a = (d[i] ?? 0) * 0.3 + (d[i + 1] ?? 0) * 0.59 + (d[i + 2] ?? 0) * 0.11;
+    const b = (d[i - 4] ?? 0) * 0.3 + (d[i - 3] ?? 0) * 0.59 + (d[i - 2] ?? 0) * 0.11;
     const diff = a - b;
     sum += diff; sq += diff * diff; n++;
   }
@@ -109,13 +110,16 @@ async function prepareImage(file: File): Promise<{ blob: Blob; warning: string |
   if (!warning && variance < 30) warning = "This photo looks a little blurry. A sharper photo gives better results.";
 
   const max = 1600;
-  if (Math.max(width, height) <= max && file.size < 3_000_000) return { blob: file, warning };
+  if (Math.max(width, height) <= max && file.size < 3_000_000) { bmp.close(); return { blob: file, warning }; }
   const k = max / Math.max(width, height);
   const out = document.createElement("canvas");
   out.width = Math.round(width * Math.min(1, k));
   out.height = Math.round(height * Math.min(1, k));
-  out.getContext("2d")!.drawImage(bmp, 0, 0, out.width, out.height);
-  const blob = await new Promise<Blob>((r) => out.toBlob((b) => r(b!), "image/jpeg", 0.88));
+  const outputContext = out.getContext("2d");
+  if (!outputContext) { bmp.close(); throw new Error("Could not prepare this photo."); }
+  outputContext.drawImage(bmp, 0, 0, out.width, out.height);
+  bmp.close();
+  const blob = await new Promise<Blob>((resolve, reject) => out.toBlob((b) => b ? resolve(b) : reject(new Error("Could not prepare this photo.")), "image/jpeg", 0.88));
   return { blob, warning };
 }
 
@@ -147,6 +151,7 @@ export function Index() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const [warning, setWarning] = useState<string | null>(null);
   const [audience, setAudience] = useState<Audience>("Kids");
   const [age, setAge] = useState("5-7 years");
@@ -212,7 +217,7 @@ export function Index() {
         outfit: resolvedOutfit,
         blouse: BLOUSE_OPTIONS.find((b) => b.value === resolvedBlouse)?.label ?? resolvedBlouse,
         sleeve: SLEEVE_OPTIONS.find((s) => s.value === sleeveDesign)?.label ?? sleeveDesign,
-        matching: matchingPieces ? matchingPieces.split(",").map((p) => `Matching ${p[0]!.toUpperCase()}${p.slice(1)}`).join(" + ") : "None",
+        matching: matchingPieces ? matchingPieces.split(",").map((p) => `Matching ${p.charAt(0).toUpperCase()}${p.slice(1)}`).join(" + ") : "None",
         age: audience === "Kids" ? age : null,
         inspiration: selectedReference?.designName ?? "Original Design",
       };
@@ -289,13 +294,14 @@ export function Index() {
     setPhase("form");
   };
 
+  const reviewLook = outfitDesign === "suggest" ? suggestLook(audience, age) : null;
   const reviewRows: [string, string | undefined][] = [
     ["Outfit", outfitDesign === "suggest" ? "AI stylist choice" : outfitDesign],
     ["For", `${audience}${audience === "Kids" ? ` · ${age}` : ""}`],
-    ["Silhouette", style], ["Blouse", BLOUSE_OPTIONS.find(b => b.value === blouseDesign)?.label],
+    ["Silhouette", style], ["Blouse", BLOUSE_OPTIONS.find(b => b.value === (reviewLook?.blouse ?? blouseDesign))?.label],
     ["Sleeves", SLEEVE_OPTIONS.find(s => s.value === sleeveDesign)?.label],
     ["Presentation", modelType], ["Reference", selectedReference?.designName ?? "Original design"],
-    ["Matching", [matchBlouse ? "Blouse" : "", matchDupatta ? "Dupatta" : ""].filter(Boolean).join(" & ") || "None"],
+    ["Matching", [(reviewLook?.matchBlouse ?? matchBlouse) ? "Blouse" : "", (reviewLook?.matchDupatta ?? matchDupatta) ? "Dupatta" : ""].filter(Boolean).join(" & ") || "None"],
   ];
   const choices = <BlouseDupattaCustomization value={customization} onChange={setCustomization} section={customTab === "blouse" ? "blouse" : customTab === "dupatta" ? "dupatta" : "coordination"} />;
 
@@ -328,7 +334,7 @@ export function Index() {
             {step === 3 && <>
               <p className="studio-eyebrow">STEP 03 / MAKE IT YOURS</p><h2 className="mb-6 mt-2 text-3xl font-semibold">The details make the design</h2>
               <Tabs value={customTab} onValueChange={setCustomTab}>
-                <TabsList className="mb-5 flex h-auto w-full justify-start gap-1 overflow-x-auto bg-secondary/70 p-1">{[["outfit", "Outfit & sleeves"], ["blouse", "Blouse"], ["back", "Blouse back"], ["dupatta", "Dupatta"], ["colours", "Colours & fabric"]].map(([id, name]) => <TabsTrigger className="min-h-10 shrink-0" key={id} value={id}>{name}</TabsTrigger>)}</TabsList>
+                <TabsList className="mb-5 flex h-auto w-full justify-start gap-1 overflow-x-auto bg-secondary/70 p-1">{([["outfit", "Outfit & sleeves"], ["blouse", "Blouse"], ["back", "Blouse back"], ["dupatta", "Dupatta"], ["colours", "Colours & fabric"]] as const).map(([id, name]) => <TabsTrigger className="min-h-10 shrink-0" key={id} value={id}>{name}</TabsTrigger>)}</TabsList>
                 <TabsContent value="outfit" className="space-y-6"><div><Label>Outfit style</Label><div className="flex gap-2">{STYLES.map(s => <Chip key={s} active={style === s} onClick={() => setStyle(s)}>{s}</Chip>)}</div></div><div><Label>Sleeve Design</Label><div role="radiogroup" aria-label="Sleeve design" className="flex flex-wrap gap-2">{SLEEVE_OPTIONS.map(o => <Button key={o.value} variant={sleeveDesign === o.value ? "default" : "outline"} role="radio" aria-checked={sleeveDesign === o.value} onClick={() => setSleeveDesign(o.value)}><span aria-hidden>{o.icon}</span>{o.label}</Button>)}</div></div><Accordion type="single" collapsible><AccordionItem value="reference"><AccordionTrigger>Design inspiration · optional</AccordionTrigger><AccordionContent><DesignInspiration outfit={inspirationOutfit} selectedId={selectedReference?.id ?? null} onSelect={setReferenceId} /></AccordionContent></AccordionItem><AccordionItem value="model"><AccordionTrigger>Model & presentation</AccordionTrigger><AccordionContent><div className="flex gap-2">{MODELS.map(m => <Chip key={m} active={modelType === m} onClick={() => setModelType(m)}>{m === "Fashion model" ? m : "Mannequin only"}</Chip>)}</div></AccordionContent></AccordionItem></Accordion></TabsContent>
                 <TabsContent value="blouse"><div className="mb-6"><Label>Blouse Design</Label><div role="radiogroup" aria-label="Blouse design" className="flex flex-wrap gap-2">{BLOUSE_OPTIONS.map(b => <Button key={b.value} variant={blouseDesign === b.value ? "default" : "outline"} role="radio" aria-checked={blouseDesign === b.value} onClick={() => setBlouseDesign(b.value)}>{b.label}</Button>)}</div></div>{choices}</TabsContent>
                 <TabsContent value="back"><Accordion type="single" collapsible><AccordionItem value="gallery"><AccordionTrigger>Choose a blouse back · optional</AccordionTrigger><AccordionContent><BlouseBackGallery value={backDesign} onChange={setBackDesign} /></AccordionContent></AccordionItem></Accordion></TabsContent>
