@@ -84,11 +84,11 @@ describe("Guided studio", () => {
   it("submits the resolved stylist choices while preserving independent customization", async () => {
     render(<Index />); await upload();
     fireEvent.click(screen.getByRole("button", { name: "Continue to Style" }));
-    fireEvent.click(screen.getByRole("button", { name: "Women", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Women" }));
     fireEvent.click(screen.getByRole("radio", { name: "AI Stylist Choice" }));
     fireEvent.click(screen.getByRole("button", { name: "Customize Design" }));
-    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse", exact: true }));
-    fireEvent.click(screen.getByRole("radio", { name: "Black", exact: true }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Blouse" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Black" }));
     fireEvent.click(screen.getByRole("button", { name: "Review Design" }));
     fireEvent.click(screen.getByRole("button", { name: "Generate Outfit" }));
     await waitFor(() => expect(mocks.generator).toHaveBeenCalledTimes(1));

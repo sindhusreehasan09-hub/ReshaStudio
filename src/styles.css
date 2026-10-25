@@ -86,6 +86,12 @@
   --input: oklch(0.9 0.017 45);
   --ring: oklch(0.76 0.12 78);
   --gold: oklch(0.72 0.12 78);
+  --swatch-antique-gold: oklch(0.57 0.10 83);
+  --swatch-silver: oklch(0.78 0.01 250);
+  --swatch-black: oklch(0.22 0.005 40);
+  --swatch-green: oklch(0.49 0.10 155);
+  --swatch-pink: oklch(0.72 0.13 5);
+  --swatch-blue: oklch(0.48 0.12 250);
   --gradient-maroon: linear-gradient(135deg, oklch(0.45 0.16 15), oklch(0.34 0.12 10));
   --gradient-gold: linear-gradient(90deg, transparent, oklch(0.72 0.12 78), transparent);
   --shadow-soft: 0 10px 30px -12px oklch(0.42 0.15 15 / 0.25);
