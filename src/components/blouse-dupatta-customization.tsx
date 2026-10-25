@@ -64,7 +64,7 @@ function ChipRow<T extends string>({ options, value, onChange, ariaLabel }: {
   ariaLabel: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+    <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap gap-2 pb-1">
       {options.map((o) => (
         <Button variant="outline"
           key={o.value}
@@ -78,6 +78,7 @@ function ChipRow<T extends string>({ options, value, onChange, ariaLabel }: {
               : "border-border bg-card text-secondary-foreground hover:border-accent"
           }`}
         >
+          {ariaLabel.toLowerCase().includes("colour") && <span aria-hidden="true" className={`colour-swatch colour-swatch-${o.value}`} />}
           {o.label}
         </Button>
       ))}
@@ -146,7 +147,7 @@ export function BlouseDupattaCustomization({ value, onChange, section = "all" }:
     <div className="flex flex-col gap-4">
       {(section === "all" || section === "coordination") && <div>
         <Label>Colour Coordination</Label>
-        <div role="radiogroup" aria-label="Colour coordination" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+        <div role="radiogroup" aria-label="Colour coordination" className="flex flex-wrap gap-2 pb-1">
           {COORDINATION_PRESETS.map((c) => (
             <Button variant="outline"
               key={c.value}
