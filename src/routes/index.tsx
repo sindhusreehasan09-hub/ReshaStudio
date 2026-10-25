@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { saveDesign, toThumbnail, type SavedDesign } from "@/lib/local-gallery";
-import { DEFAULT_SLEEVE, SLEEVE_OPTIONS, type OutfitType, type SleeveDesign, type RequestSelections } from "@/lib/outfit-prompt";
+import { DEFAULT_SLEEVE, SLEEVE_OPTIONS, BLOUSE_FABRIC_OPTIONS, BLOUSE_COLOUR_OPTIONS, BLOUSE_EMBELLISHMENT_OPTIONS, DUPATTA_FABRIC_OPTIONS, DUPATTA_COLOUR_OPTIONS, DUPATTA_DESIGN_OPTIONS, COORDINATION_PRESETS, findBackDesign, type OutfitType, type SleeveDesign, type RequestSelections } from "@/lib/outfit-prompt";
 import { createViewGenerator, generateViews, retryMissingView, type OutfitViews, type OutfitView, type ViewErrors } from "@/lib/outfit-views";
 import { OutfitCarousel } from "@/components/outfit-carousel";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { BlouseDupattaCustomization, DEFAULT_CUSTOMIZATION } from "@/components/
 import { BlouseBackGallery, DEFAULT_BACK_DESIGN } from "@/components/blouse-back-gallery";
 import { CustomizationSummary } from "@/components/customization-summary";
 import { ArrowLeft, ArrowRight, Check, Upload, ImagePlus, Trash2, Sparkles, Download, RotateCcw, BookmarkCheck, Scissors } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { OutfitIllustration } from "@/components/outfit-illustration";
 
@@ -145,7 +144,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 export function Index() {
   const [step, setStep] = useState(1);
-  const [customTab, setCustomTab] = useState("outfit");
+  const [customSection, setCustomSection] = useState("outfit");
   const requestLock = useRef(false);
   const moveTo = (next: number) => { setStep(next); window.scrollTo({ top: 0, behavior: "instant" }); };
   const inputRef = useRef<HTMLInputElement>(null);
