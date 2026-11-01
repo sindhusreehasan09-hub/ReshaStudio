@@ -6,3 +6,4 @@
 - [x] Refresh shared navigation, focused results and device history gallery.
 - [x] Test wizard validation, persistence, generation, carousel and history with mocked calls (60 tests pass; build OK; desktop/mobile journey verified; exactly two simulated image calls).
 - [ ] Post-generation garment edits and version history (separate earlier feature, not implemented; excluded from the presentation-only redesign).
+- [x] Finish Step 3 numbered accordion layout; 62 tests pass, build OK, desktop/mobile navigation and persistence verified with exactly two mocked image calls and no paid generation.

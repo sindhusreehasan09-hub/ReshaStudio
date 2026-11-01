@@ -144,13 +144,13 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function SectionCard({ value, number, title, summary, children }: { value: string; number: number; title: string; summary: string; children: React.ReactNode }) {
   return (
-    <AccordionItem value={value} className="rounded-xl border border-border bg-card px-4 shadow-soft">
+    <AccordionItem value={value} className="rounded-lg border border-border bg-card px-4">
       <AccordionTrigger className="gap-3 py-4 hover:no-underline">
         <span className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-primary">{number}</span>
           <span className="min-w-0">
             <span className="block text-base font-semibold text-foreground">{title}</span>
-            <span className="block truncate text-xs font-normal text-muted-foreground">{summary}</span>
+            <span className="mt-1 block break-words text-xs font-normal leading-relaxed text-muted-foreground">{summary}</span>
           </span>
         </span>
       </AccordionTrigger>
@@ -357,15 +357,36 @@ export function Index() {
               <div role="radiogroup" aria-label="Outfit design" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">{OUTFITS.map(o => <Button key={o} variant="outline" role="radio" aria-checked={outfitDesign === o} onClick={() => { setOutfitDesign(o); setReferenceId(null); }} className={`outfit-option h-auto min-w-0 flex-col gap-0 whitespace-normal p-0 ${outfitDesign === o ? "border-primary ring-1 ring-primary" : ""}`}><span className="relative grid h-32 w-full place-items-center bg-secondary/45">{o === "suggest" ? <Sparkles className="size-9 text-primary" /> : <OutfitIllustration outfit={o} />}{outfitDesign === o && <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground"><Check className="size-3" /></span>}</span><span className="min-h-12 px-2 py-3 text-xs font-medium">{o === "suggest" ? "AI Stylist Choice" : o}</span></Button>)}</div>
             </>}
             {step === 3 && <>
-              <p className="studio-eyebrow">STEP 03 / MAKE IT YOURS</p><h2 className="mb-6 mt-2 text-3xl font-semibold">The details make the design</h2>
-              <Tabs value={customTab} onValueChange={setCustomTab}>
-                <TabsList className="mb-5 flex h-auto w-full justify-start gap-1 overflow-x-auto bg-secondary/70 p-1">{([["outfit", "Outfit & sleeves"], ["blouse", "Blouse"], ["back", "Blouse back"], ["dupatta", "Dupatta"], ["colours", "Colours & fabric"]] as const).map(([id, name]) => <TabsTrigger className="min-h-10 shrink-0" key={id} value={id}>{name}</TabsTrigger>)}</TabsList>
-                <TabsContent value="outfit" className="space-y-6"><div><Label>Outfit style</Label><div className="flex gap-2">{STYLES.map(s => <Chip key={s} active={style === s} onClick={() => setStyle(s)}>{s}</Chip>)}</div></div><div><Label>Sleeve Design</Label><div role="radiogroup" aria-label="Sleeve design" className="flex flex-wrap gap-2">{SLEEVE_OPTIONS.map(o => <Button key={o.value} variant={sleeveDesign === o.value ? "default" : "outline"} role="radio" aria-checked={sleeveDesign === o.value} onClick={() => setSleeveDesign(o.value)}><span aria-hidden>{o.icon}</span>{o.label}</Button>)}</div></div><Accordion type="single" collapsible><AccordionItem value="reference"><AccordionTrigger>Design inspiration · optional</AccordionTrigger><AccordionContent><DesignInspiration outfit={inspirationOutfit} selectedId={selectedReference?.id ?? null} onSelect={setReferenceId} /></AccordionContent></AccordionItem><AccordionItem value="model"><AccordionTrigger>Model & presentation</AccordionTrigger><AccordionContent><div className="flex gap-2">{MODELS.map(m => <Chip key={m} active={modelType === m} onClick={() => setModelType(m)}>{m === "Fashion model" ? m : "Mannequin only"}</Chip>)}</div></AccordionContent></AccordionItem></Accordion></TabsContent>
-                <TabsContent value="blouse"><div className="mb-6"><Label>Blouse Design</Label><div role="radiogroup" aria-label="Blouse design" className="flex flex-wrap gap-2">{BLOUSE_OPTIONS.map(b => <Button key={b.value} variant={blouseDesign === b.value ? "default" : "outline"} role="radio" aria-checked={blouseDesign === b.value} onClick={() => setBlouseDesign(b.value)}>{b.label}</Button>)}</div></div>{choices}</TabsContent>
-                <TabsContent value="back"><Accordion type="single" collapsible><AccordionItem value="gallery"><AccordionTrigger>Choose a blouse back · optional</AccordionTrigger><AccordionContent><BlouseBackGallery value={backDesign} onChange={setBackDesign} /></AccordionContent></AccordionItem></Accordion></TabsContent>
-                <TabsContent value="dupatta">{choices}</TabsContent>
-                <TabsContent value="colours">{choices}<div className="mt-6"><Label>Saree fabric matching</Label><div className="flex gap-2"><Button variant={matchBlouse ? "default" : "outline"} aria-pressed={matchBlouse} onClick={() => setMatchBlouse(v => !v)}>Matching Blouse</Button><Button variant={matchDupatta ? "default" : "outline"} aria-pressed={matchDupatta} onClick={() => setMatchDupatta(v => !v)}>Matching Dupatta</Button></div></div></TabsContent>
-              </Tabs>
+              <p className="studio-eyebrow">STEP 03 / MAKE IT YOURS</p>
+              <h2 className="mt-2 text-3xl font-semibold">Personalize your design</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Choose the details you love. Skip anything you're unsure about.</p>
+              <Button variant="outline" className="my-5 min-h-11" onClick={applyStylist}><Sparkles />Use AI Stylist Choice</Button>
+              <Accordion type="single" collapsible value={customSection} onValueChange={setCustomSection} className="space-y-3">
+                <SectionCard value="outfit" number={1} title="Outfit & sleeves" summary={outfitSummary}>
+                  <div><Label>Outfit style</Label><div className="grid grid-cols-3 gap-2">{STYLES.map(s => <Chip key={s} active={style === s} onClick={() => setStyle(s)}>{s}</Chip>)}</div></div>
+                  <div><Label>Sleeve Design</Label><div role="radiogroup" aria-label="Sleeve design" className="grid grid-cols-2 gap-2 sm:grid-cols-3">{SLEEVE_OPTIONS.map(o => <Button className="h-auto min-h-11 whitespace-normal px-2 py-2" key={o.value} variant={sleeveDesign === o.value ? "default" : "outline"} role="radio" aria-checked={sleeveDesign === o.value} onClick={() => setSleeveDesign(o.value)}><span aria-hidden>{o.icon}</span>{o.label}</Button>)}</div></div>
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="reference"><AccordionTrigger>Design inspiration · optional</AccordionTrigger><AccordionContent><DesignInspiration outfit={inspirationOutfit} selectedId={selectedReference?.id ?? null} onSelect={setReferenceId} /></AccordionContent></AccordionItem>
+                    <AccordionItem value="model"><AccordionTrigger>Model & presentation</AccordionTrigger><AccordionContent><div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{MODELS.map(m => <Chip key={m} active={modelType === m} onClick={() => setModelType(m)}>{m === "Fashion model" ? m : "Mannequin only"}</Chip>)}</div></AccordionContent></AccordionItem>
+                  </Accordion>
+                </SectionCard>
+                <SectionCard value="blouse" number={2} title="Blouse design" summary={blouseSummary}>
+                  <div><Label>Blouse Design</Label><div role="radiogroup" aria-label="Blouse design" className="grid grid-cols-2 gap-2 sm:grid-cols-3">{BLOUSE_OPTIONS.map(b => <Button className="h-auto min-h-11 whitespace-normal px-2 py-2" key={b.value} variant={blouseDesign === b.value ? "default" : "outline"} role="radio" aria-checked={blouseDesign === b.value} onClick={() => setBlouseDesign(b.value)}>{b.label}</Button>)}</div></div>
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="blouse-details"><AccordionTrigger>Fabric, colour & embellishments</AccordionTrigger><AccordionContent><BlouseDupattaCustomization value={customization} onChange={setCustomization} section="blouse" /></AccordionContent></AccordionItem>
+                    <AccordionItem value="blouse-matching"><AccordionTrigger>Saree fabric matching</AccordionTrigger><AccordionContent><Button variant={matchBlouse ? "default" : "outline"} aria-pressed={matchBlouse} onClick={() => setMatchBlouse(v => !v)}>Matching Blouse</Button></AccordionContent></AccordionItem>
+                  </Accordion>
+                </SectionCard>
+                <SectionCard value="back" number={3} title="Blouse back design" summary={backSummary}>
+                  <BlouseBackGallery value={backDesign} onChange={setBackDesign} />
+                </SectionCard>
+                <SectionCard value="dupatta" number={4} title="Dupatta design" summary={dupattaSummary}>
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="dupatta-details"><AccordionTrigger>Fabric, colour, design & draping</AccordionTrigger><AccordionContent><BlouseDupattaCustomization value={customization} onChange={setCustomization} section="dupatta" /></AccordionContent></AccordionItem>
+                    <AccordionItem value="coordination"><AccordionTrigger>Colour coordination & saree matching</AccordionTrigger><AccordionContent><BlouseDupattaCustomization value={customization} onChange={setCustomization} section="coordination" /><Button className="mt-4" variant={matchDupatta ? "default" : "outline"} aria-pressed={matchDupatta} onClick={() => setMatchDupatta(v => !v)}>Matching Dupatta</Button></AccordionContent></AccordionItem>
+                  </Accordion>
+                </SectionCard>
+              </Accordion>
             </>}
             {step === 4 && <>
               <p className="studio-eyebrow">STEP 04 / READY TO CREATE</p><h2 className="mb-6 mt-2 text-3xl font-semibold">Your design, considered</h2>
@@ -373,7 +394,7 @@ export function Index() {
               <div className="mt-6 border-t border-border pt-4"><div className="mb-4 flex items-center justify-between"><h3 className="text-2xl">Finishing details</h3><Button variant="ghost" onClick={() => moveTo(3)}>Edit details</Button></div><CustomizationSummary selections={{ ...customization, backDesign: backDesign.design, backDesignCustom: backDesign.custom }} /><dl className="mt-4 space-y-2 text-sm text-muted-foreground">{[["Back depth", backDesign.depth], ["Closure", backDesign.closure], ["Dori", backDesign.dori], ["Tassels", backDesign.tassels], ["Back border", backDesign.border], ["Instructions", backDesign.notes]].filter(([, v]) => v).map(([k, v]) => <div className="flex justify-between gap-4" key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></div><p className="mt-6 text-sm text-muted-foreground">Two matching views will be generated. This may take a little time.</p>
             </>}
             {error && <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-            <footer className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-5"><Button variant="ghost" disabled={step === 1} onClick={() => moveTo(step - 1)}><ArrowLeft />Back</Button><Button className="min-h-12 px-5" onClick={() => step === 4 ? create() : moveTo(step + 1)} disabled={!file}>{step === 1 ? "Continue to Style" : step === 2 ? "Customize Design" : step === 3 ? "Review Design" : "Generate Outfit"}{step === 4 ? <Sparkles /> : <ArrowRight />}</Button></footer>
+            <footer className={`mt-8 flex items-center justify-between gap-3 border-t border-border bg-background py-4 ${step === 3 ? "sticky bottom-0 z-10" : ""}`}><Button variant="ghost" disabled={step === 1} onClick={() => moveTo(step - 1)}><ArrowLeft />Back</Button><Button className="min-h-12 px-5" onClick={() => step === 4 ? create() : moveTo(step + 1)} disabled={!file}>{step === 1 ? "Continue to Style" : step === 2 ? "Customize Design" : step === 3 ? "Review My Design" : "Generate Outfit"}{step === 4 ? <Sparkles /> : <ArrowRight />}</Button></footer>
           </section>
           <aside className="studio-summary hidden lg:block"><p className="studio-eyebrow">YOUR DESIGN</p>{preview ? <img src={preview} alt="Saree textile preview" className="my-5 aspect-[4/3] w-full rounded-lg object-cover" /> : <div className="my-5 grid aspect-[4/3] place-items-center rounded-lg bg-secondary"><OutfitIllustration outfit={inspirationOutfit} /></div>}<h3 className="text-2xl">{outfitDesign === "suggest" ? "AI stylist choice" : outfitDesign}</h3><p className="mb-5 mt-1 text-sm text-muted-foreground">{audience}{audience === "Kids" ? ` · ${age}` : ""}</p><CustomizationSummary selections={{ ...customization, backDesign: backDesign.design }} /><div className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">Estimated fabric <span className="float-right font-medium text-foreground">{estimateFabric(audience, age, outfitDesign).join("–")} m</span></div></aside>
         </div>
