@@ -46,7 +46,7 @@ function ControlRow({ label, options, value, onChange }: {
   return (
     <div>
       <Label>{label}</Label>
-      <div role="radiogroup" aria-label={label} className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+      <div role="radiogroup" aria-label={label} className="grid grid-cols-2 gap-2 pb-1 sm:grid-cols-3">
         {options.map((o) => (
           <Button variant="outline"
             key={o.value}
@@ -54,7 +54,7 @@ function ControlRow({ label, options, value, onChange }: {
             role="radio"
             aria-checked={value === o.value}
             onClick={() => onChange(value === o.value ? null : o.value)}
-            className={`h-auto shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
+            className={`h-auto min-h-11 whitespace-normal rounded-full border px-3 py-2 text-sm font-medium transition-all ${
               value === o.value
                 ? "border-primary bg-primary text-primary-foreground shadow-soft"
                 : "border-border bg-card text-secondary-foreground hover:border-accent"
