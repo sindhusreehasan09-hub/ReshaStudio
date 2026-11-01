@@ -84,6 +84,45 @@ describe("Guided studio", () => {
     expect(mocks.generator).not.toHaveBeenCalled();
   });
 
+  it("opens one section at a time and retains back instructions through collapse and backward navigation", async () => {
+    render(<Index />); await customize();
+    const outfit = screen.getByRole("button", { name: /1 Outfit & sleeves/ });
+    const back = screen.getByRole("button", { name: /3 Blouse back design/ });
+    expect(outfit).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(back);
+    expect(outfit).toHaveAttribute("aria-expanded", "false");
+    expect(back).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("radio", { name: /^Deep U-Back with Dori:/ }));
+    fireEvent.change(screen.getByLabelText("Additional back design instructions"), { target: { value: "Pearl details" } });
+    fireEvent.click(back);
+    expect(back).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(back);
+    expect(screen.getByLabelText("Additional back design instructions")).toHaveValue("Pearl details");
+    fireEvent.click(screen.getByRole("button", { name: "Back", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Customize Design" }));
+    expect(screen.getByLabelText("Additional back design instructions")).toHaveValue("Pearl details");
+    expect(mocks.generator).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Review My Design" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate Outfit" }));
+    await waitFor(() => expect(mocks.generator).toHaveBeenCalledTimes(1));
+    expect(mocks.generator.mock.calls[0]?.[1]).toMatchObject({ backDesign: "deep-u-dori", backNotes: "Pearl details" });
+  });
+
+  it("applies stylist guidance without resetting independent fabric and colour choices or making a request", async () => {
+    render(<Index />); await customize();
+    fireEvent.click(screen.getByRole("button", { name: /2 Blouse design/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Fabric, colour & embellishments" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Velvet" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Black" }));
+    fireEvent.click(screen.getByRole("button", { name: "Use AI Stylist Choice" }));
+    expect(screen.getByRole("radio", { name: "Black" })).toHaveAttribute("aria-checked", "true");
+    expect(mocks.generator).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Review My Design" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate Outfit" }));
+    await waitFor(() => expect(mocks.generator).toHaveBeenCalledTimes(1));
+    expect(mocks.generator.mock.calls[0]?.[1]).toMatchObject({ blouse: "suggest", blouseFabric: "velvet", blouseColour: "black", coordination: "stylist" });
+  });
+
   it("submits the resolved stylist choices while preserving independent customization", async () => {
     render(<Index />); await upload();
     fireEvent.click(screen.getByRole("button", { name: "Continue to Style" }));
