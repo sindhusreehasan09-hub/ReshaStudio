@@ -98,7 +98,7 @@ describe("Guided studio", () => {
     expect(back).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(back);
     expect(screen.getByLabelText("Additional back design instructions")).toHaveValue("Pearl details");
-    fireEvent.click(screen.getByRole("button", { name: "Back", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: /^Back$/ }));
     fireEvent.click(screen.getByRole("button", { name: "Customize Design" }));
     expect(screen.getByLabelText("Additional back design instructions")).toHaveValue("Pearl details");
     expect(mocks.generator).not.toHaveBeenCalled();
