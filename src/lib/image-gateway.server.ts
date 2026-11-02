@@ -15,9 +15,13 @@ export async function outfitViewResponse(request: Request) {
     const selections = parsePromptInput(input);
     // Privileged access is limited to app-owned service block state, not user data.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: block, error: guardError } = await supabaseAdmin.from("ai_generation_access_guard").select("status,message").eq("id", "image-generation").maybeSingle();
+    const { data: block, error: guardError } = await supabaseAdmin.from("ai_generation_access_guard").select("status,message,updated_at").eq("id", "image-generation").maybeSingle();
     if (guardError) return Response.json({ message: "Image generation availability could not be checked. Please try later." }, { status: 503 });
-    if (block) return Response.json({ message: block.message }, { status: block.status });
+    // A "not enough credits" block is temporary: credits refill or get topped up,
+    // so it expires after a short window instead of blocking forever.
+    const CREDIT_BLOCK_MS = 30 * 60 * 1000;
+    const expired = block?.status === 402 && Date.now() - new Date(block.updated_at).getTime() > CREDIT_BLOCK_MS;
+    if (block && !expired) return Response.json({ message: block.message }, { status: block.status });
     const form = new FormData();
     form.append("image[]", source);
     if (counterpart instanceof File) form.append("image[]", counterpart);
