@@ -76,6 +76,15 @@ describe("Guided studio", () => {
     expect(screen.getByRole("button", { name: "Generate Outfit" })).toBeEnabled();
   });
 
+  it("shows a free sketch preview on review without any generation request", async () => {
+    render(<Index />); await customize();
+    fireEvent.click(screen.getByRole("button", { name: "Review My Design" }));
+    expect(screen.getByText(/FREE PREVIEW/)).toBeInTheDocument();
+    expect(screen.getByText(/only when you choose Generate Outfit/)).toBeInTheDocument();
+    expect(mocks.generator).not.toHaveBeenCalled();
+    expect(mocks.generate).not.toHaveBeenCalled();
+  });
+
   it("removes the photo and blocks further steps without a generation request", async () => {
     render(<Index />); await upload();
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
