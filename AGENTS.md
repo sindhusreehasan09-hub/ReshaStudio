@@ -14,3 +14,4 @@
 - Store only AI access-block status in Lovable Cloud; never store design history there, and fail closed when the access guard cannot be read.
 - Customization catalogs and prompt rules are shared browser-safe logic; store selections in the existing device record and render their summary with one shared component to preserve legacy records without a migration.
 - Keep wizard steps and single-open customization accordions as presentation state around the existing generation configuration, and filter shared customization panels by section; this preserves complete requests when navigating or collapsing sections.
+- Keep the free result editor as an isolated local draft inside the shared carousel; it must never call generation or overwrite saved designs, so exploration cannot spend credits or mutate originals.

@@ -68,9 +68,10 @@ function ControlRow({ label, options, value, onChange }: {
   );
 }
 
-export function BlouseBackGallery({ value, onChange }: {
+export function BlouseBackGallery({ value, onChange, renderThumbnail }: {
   value: BackDesignState;
   onChange: (value: BackDesignState) => void;
+  renderThumbnail?: (design: BackDesignValue) => React.ReactNode;
 }) {
   const set = <K extends keyof BackDesignState>(key: K, v: BackDesignState[K]) => onChange({ ...value, [key]: v });
   const selected = findBackDesign(value.design);
@@ -96,8 +97,7 @@ export function BlouseBackGallery({ value, onChange }: {
               }`}
             >
               <span className="flex h-16 w-full flex-col items-center justify-center gap-1 bg-secondary text-muted-foreground">
-                <ImageOff aria-hidden="true" className="size-4" />
-                <span className="text-[9px]">Reference image pending</span>
+                {renderThumbnail ? renderThumbnail(d.value) : <><ImageOff aria-hidden="true" className="size-4" /><span className="text-[9px]">Reference image pending</span></>}
               </span>
               <span className="flex flex-1 flex-col gap-0.5 px-2 py-1.5">
                 <span className={`text-xs font-semibold ${active ? "text-primary" : "text-foreground"}`}>{d.label}</span>
