@@ -9,7 +9,7 @@ import { blouseDraftFromDesign, NECKLINE_OPTIONS, type BlouseDraft } from "@/lib
 import { SLEEVE_OPTIONS } from "@/lib/outfit-prompt";
 import type { SavedDesign } from "@/lib/local-gallery";
 
-export function FreeBlouseEditor({ design, onCancel }: { design?: SavedDesign | null; onCancel: () => void }) {
+export function FreeBlouseEditor({ design, onCancel }: { design?: SavedDesign | null | undefined; onCancel: () => void }) {
   const [draft, setDraft] = useState<BlouseDraft>(() => blouseDraftFromDesign(design));
   const patch = (updates: Partial<BlouseDraft>) => setDraft(previous => ({ ...previous, ...updates }));
   const customization: CustomizationState = {
