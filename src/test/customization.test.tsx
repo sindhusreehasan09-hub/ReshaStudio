@@ -107,3 +107,8 @@ describe("back construction and compatibility", () => {
     expect(forms[1]?.get("counterpart")).toBeInstanceOf(File);
   });
 });
+describe("designer sleeve references", () => {
+  it.each([["scalloped-cap", "scallop-cut"], ["draped-cowl", "cowl folds"], ["tassel-cuff", "tassels"]] as const)("sends %s construction in the prompt", (sleeve, text) => {
+    expect(buildPrompt(parse({ sleeve }))).toContain(text);
+  });
+});
