@@ -5,7 +5,7 @@ import { OutfitCarousel } from "@/components/outfit-carousel";
 import { createViewGenerator, retryMissingView, type OutfitView } from "@/lib/outfit-views";
 import { saveDesign, toThumbnail } from "@/lib/local-gallery";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft, ArrowRight, ImagePlus } from "lucide-react";
+import { Download, ArrowLeft, ArrowRight, ImagePlus, Pencil } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { CustomizationSummary } from "@/components/customization-summary";
 
@@ -25,13 +25,18 @@ export const Route = createFileRoute("/gallery")({
 
 type Generation = SavedDesign;
 
-function Gallery() {
+export function Gallery() {
   const [items, setItems] = useState<Generation[] | null>(null);
   const [selected, setSelected] = useState<Generation | null>(null);
+  const [startEditing, setStartEditing] = useState(false);
   const [currentView, setCurrentView] = useState<OutfitView>("front");
   const [busy, setBusy] = useState<OutfitView | null>(null);
   const [retryError, setRetryError] = useState<string | null>(null);
   useEffect(() => setItems(loadDesigns()), []);
+
+  const openDesign = (design: Generation, edit = false) => {
+    setSelected(design); setStartEditing(edit); setCurrentView("front"); setRetryError(null);
+  };
 
   const retry = async (view: OutfitView) => {
     if (!selected?.source_image || !selected.selections || busy) return;

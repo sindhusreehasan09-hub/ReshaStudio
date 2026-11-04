@@ -6,12 +6,13 @@ import type { OutfitView, OutfitViews, ViewErrors } from "@/lib/outfit-views";
 import type { SavedDesign } from "@/lib/local-gallery";
 import { FreeBlouseEditor } from "./free-blouse-editor";
 
-export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry, onCurrentView, editableDesign }: {
+export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry, onCurrentView, editableDesign, startEditing = false }: {
   views: OutfitViews; errors?: ViewErrors; legacyImage?: string; busy?: OutfitView | null;
   onRetry?: ((view: OutfitView) => void) | undefined; onCurrentView?: (view: OutfitView) => void;
   editableDesign?: SavedDesign | null;
+  startEditing?: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startEditing);
   const [target, setTarget] = useState<"blouse" | "dupatta" | "outfit">("blouse");
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
