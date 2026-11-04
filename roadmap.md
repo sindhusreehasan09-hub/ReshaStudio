@@ -8,5 +8,5 @@
 - [ ] Post-generation garment edits and version history (separate earlier feature, not implemented; excluded from the presentation-only redesign).
 - [x] Finish Step 3 numbered accordion layout; 62 tests pass, build OK, desktop/mobile navigation and persistence verified with exactly two mocked image calls and no paid generation.
 - [x] Add free non-AI sketch preview on the review step; realistic images only on Generate (63 tests pass, no paid images).
-- [ ] Add interactive result-view blouse selection and a free sketch editor, restoring existing choices without changing original images or calling AI.
-- [ ] Verify free editor controls, cancellation, legacy designs, front/back navigation, and narrow-screen layout.
+- [x] Add interactive result-view blouse selection and a free sketch editor, restoring existing choices without changing original images or calling AI.
+- [x] Verify free editor controls, cancellation, legacy designs, front/back navigation, and narrow-screen layout; 69 tests pass and browser checks confirm zero image requests and unchanged saved designs.

@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({ generator: vi.fn(), generate: vi.fn(), save: v
 vi.mock("@tanstack/react-router", () => ({ createFileRoute: () => (options: unknown) => options, Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a> }));
 vi.mock("@/lib/outfit-views", () => ({ createViewGenerator: mocks.generator, generateViews: mocks.generate, retryMissingView: vi.fn() }));
 vi.mock("@/lib/local-gallery", () => ({ saveDesign: mocks.save, toThumbnail: async () => "data:image/png;base64,AA==" }));
-vi.mock("@/components/outfit-carousel", () => ({ OutfitCarousel: () => <div aria-label="Outfit views">Front View / Back View</div> }));
+vi.mock("@/components/outfit-carousel", () => ({ OutfitCarousel: ({ editableDesign }: any) => <div aria-label="Outfit views" data-editor-design={editableDesign?.id}>Front View / Back View</div> }));
 
 async function upload() {
   fireEvent.change(screen.getByLabelText("Saree photo"), { target: { files: [new File(["photo"], "saree.png", { type: "image/png" })] } });
@@ -64,6 +64,7 @@ describe("Guided studio", () => {
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
     expect(mocks.generate).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText("Outfit views")).toBeInTheDocument();
+    expect(screen.getByLabelText("Outfit views").getAttribute("data-editor-design")).toBe(mocks.save.mock.calls[0]?.[0].id);
   });
 
   it("returns generation errors to review without losing configuration or retrying", async () => {
