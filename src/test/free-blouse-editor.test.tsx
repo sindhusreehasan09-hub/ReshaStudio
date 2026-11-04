@@ -73,7 +73,10 @@ describe("free blouse editor", () => {
   });
 
   it("supports legacy single-image designs without saved selections", () => {
-    const legacy = { ...design, id: "legacy", selections: undefined, front_image: undefined, back_image: undefined };
+    const legacy: SavedDesign = { ...design, id: "legacy" };
+    delete legacy.selections;
+    delete legacy.front_image;
+    delete legacy.back_image;
     expect(blouseDraftFromDesign(legacy)).toMatchObject({ sleeve: "elbow", neckline: "round" });
     render(<OutfitCarousel views={{}} legacyImage={legacy.image} editableDesign={legacy} />);
     fireEvent.click(screen.getByRole("button", { name: "Edit Design" }));

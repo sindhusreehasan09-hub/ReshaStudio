@@ -8,7 +8,7 @@ export function BlouseSketch({ draft, back = false, thumbnail = false }: { draft
   const dori = back && (draft.backDori && draft.backDori !== "none" || /dori|bow/.test(draft.backDesign ?? ""));
   const sheer = back && /sheer/.test(draft.backDesign ?? "");
   const decorated = draft.blouseEmbellishment && draft.blouseEmbellishment !== "plain";
-  return <svg viewBox="0 0 200 170" role={thumbnail ? undefined : "img"} aria-hidden={thumbnail || undefined} aria-label={thumbnail ? undefined : `${back ? "Back" : "Front"} blouse sketch`} className="h-full w-full text-primary" fill="none">
+  return <svg viewBox="0 0 200 170" role={thumbnail ? undefined : "img"} aria-hidden={thumbnail || undefined} aria-label={thumbnail ? undefined : `${back ? "Back" : "Front"} blouse sketch`} className="size-full! text-primary" fill="none">
     <g fill={previewColour(draft.blouseColour, draft.blouseColourCustom)} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
       {length > 0 && <>
         <path d={`M65 35 L45 42 ${puff ? "Q13 47 29" : "L25"} ${48 + length} L${flare ? 10 : 33} ${53 + length} L${flare ? 43 : 51} ${53 + length} L65 65Z`} />
