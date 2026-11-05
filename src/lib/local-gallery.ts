@@ -1,4 +1,5 @@
 import type { RequestSelections } from "./outfit-prompt";
+import type { DesignVersion } from "./design-versions";
 // Designs and source photos are saved only in this browser.
 export type SavedDesign = {
   id: string;
@@ -18,6 +19,8 @@ export type SavedDesign = {
   back_image?: string | undefined;
   source_image?: string;
   selections?: RequestSelections;
+  versions?: DesignVersion[];
+  active_version_id?: string;
 };
 
 const KEY = "resha-designs";
@@ -42,6 +45,18 @@ export function saveDesign(d: SavedDesign) {
     }
   }
   return false;
+}
+
+// Version writes are atomic: never evict an original or a paid edit to make room.
+export function saveVersionDesign(d: SavedDesign) {
+  try {
+    const list = loadDesigns();
+    const index = list.findIndex(item => item.id === d.id);
+    if (index >= 0) list[index] = d;
+    else list.unshift(d);
+    localStorage.setItem(KEY, JSON.stringify(list));
+    return true;
+  } catch { return false; }
 }
 
 export async function toThumbnail(blob: Blob, max = 600): Promise<string> {
