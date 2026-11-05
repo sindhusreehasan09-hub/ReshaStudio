@@ -5,7 +5,7 @@
 - [x] Replace long creation form with a four-step guided studio while preserving selections and requests.
 - [x] Refresh shared navigation, focused results and device history gallery.
 - [x] Test wizard validation, persistence, generation, carousel and history with mocked calls (60 tests pass; build OK; desktop/mobile journey verified; exactly two simulated image calls).
-- [ ] Post-generation garment edits and version history (separate earlier feature, not implemented; excluded from the presentation-only redesign).
+- [ ] Apply Edit Design changes to actual photos as device-only versions; compare and restore originals, preserve matching views, and verify with mocked image calls.
 - [x] Finish Step 3 numbered accordion layout; 62 tests pass, build OK, desktop/mobile navigation and persistence verified with exactly two mocked image calls and no paid generation.
 - [x] Add free non-AI sketch preview on the review step; realistic images only on Generate (63 tests pass, no paid images).
 - [x] Add interactive result-view blouse selection and a free sketch editor, restoring existing choices without changing original images or calling AI.
