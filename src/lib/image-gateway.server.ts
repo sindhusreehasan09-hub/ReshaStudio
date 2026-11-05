@@ -1,4 +1,5 @@
 import { buildPrompt, parsePromptInput, ValidationError } from "./outfit-prompt";
+import { buildEditPrompt } from "./outfit-edit-prompt";
 
 export async function outfitViewResponse(request: Request) {
   const origin = request.headers.get("Origin");
@@ -9,10 +10,12 @@ export async function outfitViewResponse(request: Request) {
     const input = await request.formData();
     const source = input.get("image");
     const counterpart = input.get("counterpart");
+    const originalCounterpart = input.get("original_counterpart");
     const view = input.get("view");
     const validImage = (image: FormDataEntryValue | null): image is File => image instanceof File && image.size > 0 && image.size <= 8_000_000 && ["image/jpeg", "image/png", "image/webp"].includes(image.type);
-    if (!validImage(source) || !["front", "back"].includes(String(view)) || (counterpart && !validImage(counterpart))) throw new ValidationError("Please upload a valid saree photo and choose a view.");
+    if (!validImage(source) || !["front", "back"].includes(String(view)) || (counterpart && !validImage(counterpart)) || (originalCounterpart && !validImage(originalCounterpart))) throw new ValidationError("Please upload a valid saree photo and choose a view.");
     const selections = parsePromptInput(input);
+    const editPrompt = input.get("mode") === "edit" ? buildEditPrompt(input, selections) : null;
     // Privileged access is limited to app-owned service block state, not user data.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: block, error: guardError } = await supabaseAdmin.from("ai_generation_access_guard").select("status,message,updated_at").eq("id", "image-generation").maybeSingle();
@@ -24,10 +27,11 @@ export async function outfitViewResponse(request: Request) {
     if (block && !expired) return Response.json({ message: block.message }, { status: block.status });
     const form = new FormData();
     form.append("image[]", source);
+    if (editPrompt && originalCounterpart instanceof File) form.append("image[]", originalCounterpart);
     if (counterpart instanceof File) form.append("image[]", counterpart);
     // Curated references currently have no photo URLs; their construction details
     // are included in buildPrompt without another image or analysis request.
-    const prompt = [
+    const prompt = editPrompt ?? [
       buildPrompt(selections),
       counterpart ? "IMAGE 2 — MATCHING OUTFIT: the already generated opposite view. Keep this EXACT garment and model/dress form, fabric, colours, motif placement, embellishments, silhouette, styling and lighting. Change only camera/model orientation to the requested view." : "Create a coherent garment with physically plausible front AND back construction.",
       view === "front" ? "OUTPUT: FRONT VIEW ONLY. Model faces directly toward the camera, entire body and garment from head to feet visible, hem and shoes uncropped." : "OUTPUT: ACTUAL BACK VIEW ONLY. Model faces away from the camera, entire body and garment from head to feet visible. Show the garment's actual rear construction: blouse back neckline, age-appropriate back coverage, dori/tie details if appropriate to the selected design, closures/hooks, seams and selected embroidery. Keep the back unobstructed by hair or dupatta. Never mirror the front or show a front neckline on the back.",
