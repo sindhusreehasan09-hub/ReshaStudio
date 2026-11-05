@@ -10,4 +10,4 @@
 - [x] Add free non-AI sketch preview on the review step; realistic images only on Generate (63 tests pass, no paid images).
 - [x] Add interactive result-view blouse selection and a free sketch editor, restoring existing choices without changing original images or calling AI.
 - [x] Verify free editor controls, cancellation, legacy designs, front/back navigation, and narrow-screen layout; 69 tests pass and browser checks confirm zero image requests and unchanged saved designs.
-- [ ] Add direct Edit Design access on saved gallery outfits and test restored choices, cancellation, legacy records, and zero image requests or saved-design changes.
+- [x] Add direct Edit Design access on saved gallery outfits and test restored choices, cancellation, legacy records, and zero image requests or saved-design changes (72 tests pass; browser check confirmed editor opens from gallery with restored choices, zero image requests, saved design unchanged).
