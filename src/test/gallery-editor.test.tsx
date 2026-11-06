@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { Gallery } from "@/routes/gallery";
 import { loadDesigns, saveDesign, type SavedDesign } from "@/lib/local-gallery";
 
@@ -9,6 +9,8 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));
 vi.mock("@/lib/outfit-views", () => ({ createViewGenerator: generation.create, retryMissingView: generation.retry }));
+const editMocks = vi.hoisted(() => ({ generate: vi.fn() }));
+vi.mock("@/lib/outfit-edit", () => ({ generateEditedViews: editMocks.generate }));
 vi.mock("@/components/ui/carousel", () => ({
   Carousel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   CarouselContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -28,7 +30,10 @@ const design: SavedDesign = {
   },
 };
 
-beforeEach(() => { localStorage.clear(); vi.clearAllMocks(); });
+beforeEach(() => {
+  localStorage.clear(); vi.clearAllMocks();
+  editMocks.generate.mockResolvedValue({ views: { front: "edited-front.png", back: "edited-back.png" }, errors: {} });
+});
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("saved outfit blouse editing", () => {
@@ -65,6 +70,31 @@ describe("saved outfit blouse editing", () => {
     expect(writes).not.toHaveBeenCalled();
     expect(localStorage.getItem("resha-designs")).toBe(original);
     expect(loadDesigns()).toEqual([design]);
+  });
+
+  it("saves an applied photo edit as a new version and keeps it after leaving and reopening", async () => {
+    saveDesign(design);
+    render(<Gallery />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit Design" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Sleeves/ }));
+    fireEvent.click(screen.getByRole("radio", { name: "Sleeveless" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply to photos" }));
+    const strip = await screen.findByRole("radiogroup", { name: "Design versions" });
+    expect(editMocks.generate).toHaveBeenCalledTimes(1);
+    const stored = loadDesigns()[0]!;
+    expect(stored.versions).toHaveLength(2);
+    expect(stored.active_version_id).toBe(stored.versions?.[1]?.id);
+    expect(stored.front_image).toBe("edited-front.png");
+    // Compare/restore from the gallery viewer.
+    fireEvent.click(within(strip).getByRole("radio", { name: "Original" }));
+    expect(loadDesigns()[0]!.active_version_id).toBe("original");
+    // The version history survives leaving the viewer and reopening the design.
+    fireEvent.click(screen.getByRole("button", { name: "All designs" }));
+    fireEvent.click(screen.getByRole("button", { name: "View Design" }));
+    const reopened = await screen.findByRole("radiogroup", { name: "Design versions" });
+    expect(within(reopened).getByRole("radio", { name: "Original" })).toHaveAttribute("aria-checked", "true");
+    expect(within(reopened).getByRole("radio", { name: "Version 1" })).toBeInTheDocument();
+    expect(loadDesigns()[0]!.versions).toHaveLength(2);
   });
 
   it("lets older single-image outfits open the editor with their saved sleeve default", async () => {

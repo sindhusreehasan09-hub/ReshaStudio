@@ -40,7 +40,9 @@ export function selectVersion(design: SavedDesign, id: string): SavedDesign {
   const versions = versionsFor(design);
   const version = versions.find(v => v.id === id);
   if (!version) return design;
-  return { ...design, versions, active_version_id: id, image: version.image, front_image: version.front_image, back_image: version.back_image, selections: version.selections, sleeve: version.sleeve };
+  const next: SavedDesign = { ...design, versions, active_version_id: id, image: version.image, front_image: version.front_image, back_image: version.back_image, sleeve: version.sleeve };
+  if (version.selections) next.selections = version.selections; else delete next.selections;
+  return next;
 }
 export function appendVersion(design: SavedDesign, draft: BlouseDraft, target: EditTarget, changes: EditChanges, views: OutfitViews, errors: ViewErrors): SavedDesign {
   const base = activeVersion(design);
@@ -53,7 +55,7 @@ export function appendVersion(design: SavedDesign, draft: BlouseDraft, target: E
     id: crypto.randomUUID(), created_at: new Date().toISOString(), label: `Version ${versions.length}`,
     image: views.front ?? views.back ?? "", front_image: views.front, back_image: views.back,
     selections, editor_draft: { ...draftFor(design), ...changes } as BlouseDraft,
-    sleeve: changes.sleeve ?? design.sleeve, base_id: base?.id, target, changes, errors,
+    sleeve: changes.sleeve ?? design.sleeve, ...(base?.id ? { base_id: base.id } : {}), target, changes, errors,
   };
   return selectVersion({ ...design, versions: [...versions, version] }, version.id);
 }

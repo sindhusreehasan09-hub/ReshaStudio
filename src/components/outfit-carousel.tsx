@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import type { OutfitView, OutfitViews, ViewErrors } from "@/lib/outfit-views";
 import type { SavedDesign } from "@/lib/local-gallery";
+import { activeVersion, selectVersion, versionsFor } from "@/lib/design-versions";
 import { FreeBlouseEditor } from "./free-blouse-editor";
 
-export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry, onCurrentView, editableDesign, startEditing = false }: {
+export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry, onCurrentView, editableDesign, startEditing = false, onVersionSaved }: {
   views: OutfitViews; errors?: ViewErrors; legacyImage?: string; busy?: OutfitView | null;
   onRetry?: ((view: OutfitView) => void) | undefined; onCurrentView?: (view: OutfitView) => void;
   editableDesign?: SavedDesign | null;
   startEditing?: boolean;
+  onVersionSaved?: (design: SavedDesign) => void;
 }) {
   const [editing, setEditing] = useState(startEditing);
   const [target, setTarget] = useState<"blouse" | "dupatta" | "outfit">("blouse");
@@ -18,6 +20,8 @@ export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry,
   const [current, setCurrent] = useState(0);
   const legacy = Boolean(legacyImage && !views.front && !views.back);
   const slides: OutfitView[] = legacy ? ["front"] : ["front", "back"];
+  const versions = editableDesign ? versionsFor(editableDesign) : [];
+  const active = editableDesign ? activeVersion(editableDesign) : undefined;
   useEffect(() => {
     if (!api) return;
     const update = () => { const index = api.selectedScrollSnap(); setCurrent(index); onCurrentView?.(index === 0 ? "front" : "back"); };
@@ -26,6 +30,7 @@ export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry,
   }, [api, onCurrentView]);
   return <div className="min-w-0">
     {editableDesign && <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-muted-foreground">{editing ? "Free design preview" : "Front & back"}</span><Button variant="outline" disabled={Boolean(busy)} aria-pressed={editing} onClick={() => { setEditing(!editing); setTarget("blouse"); }}>{editing ? <X /> : <Pencil />}{editing ? "Close editor" : "Edit Design"}</Button></div>}
+    {editableDesign && versions.length > 1 && <div role="radiogroup" aria-label="Design versions" className="mb-3 flex flex-wrap items-center gap-2"><span className="text-xs text-muted-foreground">Compare:</span>{versions.map(version => <Button key={version.id} role="radio" aria-checked={active?.id === version.id} variant={active?.id === version.id ? "default" : "outline"} size="sm" disabled={Boolean(busy)} onClick={() => onVersionSaved?.(selectVersion(editableDesign, version.id))}>{version.id === "original" ? "Original" : version.label}</Button>)}</div>}
     {editing && <><div role="radiogroup" aria-label="Editing target" className="mb-3 grid grid-cols-3 gap-2">{(["blouse", "dupatta", "outfit"] as const).map(value => <Button key={value} variant={target === value ? "default" : "outline"} role="radio" aria-checked={target === value} onClick={() => setTarget(value)} className="capitalize">{value}</Button>)}</div><p className="mb-3 text-xs text-muted-foreground">Guided target outline — not an automatically detected garment boundary.</p></>}
     <Carousel setApi={setApi} opts={{ align: "start" }} aria-label="Outfit views">
     <CarouselContent>
@@ -51,7 +56,7 @@ export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry,
       <span aria-live="polite" className="text-xs text-muted-foreground">{legacy ? "Saved Design" : current === 0 ? "Front View" : "Back View"} · {current + 1}/{slides.length}</span>
     </div>
   </Carousel>
-  {editing && <div className={target === "blouse" ? "" : "hidden"}><FreeBlouseEditor design={editableDesign} onCancel={() => setEditing(false)} /></div>}
+  {editing && <div className={target === "blouse" ? "" : "hidden"}><FreeBlouseEditor design={editableDesign} target={target} onCancel={() => setEditing(false)} onVersionSaved={onVersionSaved} /></div>}
   {editing && target !== "blouse" && <p role="status" className="mt-5 border-t border-border py-5 text-sm text-muted-foreground">{target === "dupatta" ? "Dupatta" : "Whole-outfit"} editing is not available in this first release. Select Blouse to explore the free preview.</p>}
   </div>;
 }
