@@ -12,7 +12,7 @@ export function OutfitCarousel({ views, errors = {}, legacyImage, busy, onRetry,
   onRetry?: ((view: OutfitView) => void) | undefined; onCurrentView?: (view: OutfitView) => void;
   editableDesign?: SavedDesign | null;
   startEditing?: boolean;
-  onVersionSaved?: (design: SavedDesign) => void;
+  onVersionSaved?: ((design: SavedDesign) => void) | undefined;
 }) {
   const [editing, setEditing] = useState(startEditing);
   const [target, setTarget] = useState<"blouse" | "dupatta" | "outfit">("blouse");

@@ -96,7 +96,7 @@ describe("free blouse editor", () => {
     expect(saved.active_version_id).toBe(saved.versions?.[1]?.id);
     expect(saved.front_image).toBe("edited-front.png");
     expect(saved.back_image).toBe("edited-back.png");
-    const stored = loadDesigns()[0];
+    const stored = loadDesigns()[0]!;
     expect(stored.versions).toHaveLength(2);
     expect(stored.versions?.[0]).toMatchObject({ id: "original", front_image: "front.png", back_image: "back.png" });
     // Parent reflects the saved version: the compare strip appears and restore switches back.
