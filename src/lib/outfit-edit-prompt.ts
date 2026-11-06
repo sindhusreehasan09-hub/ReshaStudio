@@ -15,7 +15,8 @@ export function parseEditChanges(input: FormData, baseline: ReturnType<typeof pa
     if (!allowed.includes(key) || (value !== null && (typeof value !== "string" || value.length > 80 || /[\r\n]/.test(value)))) throw new ValidationError("Unsupported photo edit.");
   }
   if (changes.neckline && !NECKLINE_OPTIONS.some(o => o.value === changes.neckline)) throw new ValidationError("Unsupported neckline.");
-  const selections: RequestSelections = { ...baseline, modelType: baseline.mannequin ? "Dress/mannequin only" : "Fashion model", ...changes };
+  // parsePromptInput below validates every catalog value at runtime, including cleared (null) fields.
+  const selections = { ...baseline, modelType: baseline.mannequin ? "Dress/mannequin only" : "Fashion model", ...changes } as RequestSelections;
   const validated = parsePromptInput(buildRequestForm(new File([], "validation.png"), selections));
   return { target: target as EditTarget, changes, validated };
 }
