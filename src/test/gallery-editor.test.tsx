@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { Gallery } from "@/routes/gallery";
 import { loadDesigns, saveDesign, type SavedDesign } from "@/lib/local-gallery";
 
