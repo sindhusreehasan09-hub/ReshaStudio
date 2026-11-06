@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { OutfitCarousel } from "@/components/outfit-carousel";
 import { FreeBlouseEditor } from "@/components/free-blouse-editor";
 import { blouseDraftFromDesign } from "@/lib/blouse-preview";
@@ -86,7 +86,7 @@ describe("free blouse editor", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Sleeves/ }));
     fireEvent.click(screen.getByRole("radio", { name: "Sleeveless" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply to photos" }));
-    await screen.findByRole("radiogroup", { name: "Design versions" });
+    await waitFor(() => expect(onVersionSaved).toHaveBeenCalledTimes(1));
     expect(editMocks.generate).toHaveBeenCalledTimes(1);
     expect(editMocks.generate.mock.calls[0]?.[0]).toEqual(design);
     expect(editMocks.generate.mock.calls[0]?.[1]).toEqual({ sleeve: "sleeveless" });
