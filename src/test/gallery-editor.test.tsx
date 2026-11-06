@@ -81,20 +81,20 @@ describe("saved outfit blouse editing", () => {
     fireEvent.click(screen.getByRole("button", { name: "Apply to photos" }));
     const strip = await screen.findByRole("radiogroup", { name: "Design versions" });
     expect(editMocks.generate).toHaveBeenCalledTimes(1);
-    const stored = loadDesigns()[0];
+    const stored = loadDesigns()[0]!;
     expect(stored.versions).toHaveLength(2);
     expect(stored.active_version_id).toBe(stored.versions?.[1]?.id);
     expect(stored.front_image).toBe("edited-front.png");
     // Compare/restore from the gallery viewer.
     fireEvent.click(within(strip).getByRole("radio", { name: "Original" }));
-    expect(loadDesigns()[0].active_version_id).toBe("original");
+    expect(loadDesigns()[0]!.active_version_id).toBe("original");
     // The version history survives leaving the viewer and reopening the design.
     fireEvent.click(screen.getByRole("button", { name: "All designs" }));
     fireEvent.click(screen.getByRole("button", { name: "View Design" }));
     const reopened = await screen.findByRole("radiogroup", { name: "Design versions" });
     expect(within(reopened).getByRole("radio", { name: "Original" })).toHaveAttribute("aria-checked", "true");
     expect(within(reopened).getByRole("radio", { name: "Version 1" })).toBeInTheDocument();
-    expect(loadDesigns()[0].versions).toHaveLength(2);
+    expect(loadDesigns()[0]!.versions).toHaveLength(2);
   });
 
   it("lets older single-image outfits open the editor with their saved sleeve default", async () => {
